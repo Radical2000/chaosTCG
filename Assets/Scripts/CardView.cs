@@ -155,6 +155,7 @@ public class CardView : MonoBehaviour
     {
         Debug.Log($"🧪 cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
         Debug.Log($"🟡 OnClickActionButton 実行！clickMode = {clickMode}");
+        Debug.Log($"[DEBUG] 親の名前: {transform.parent.name}");
 
         // EX用素材カード選択モード
         if (transform.parent.name == "PlayerHand" )
@@ -185,11 +186,31 @@ public class CardView : MonoBehaviour
             return;
         }
         // ▼ EX C型用：墓地素材クリック
-        if (transform.parent != null && transform.parent.name.Contains("Discard") && EXManager.Instance.HasSelectedEXCard())
+        Debug.Log($"🧪 cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
+
+        // --- 墓地素材クリック判定 ---
+        if (transform.parent != null && transform.parent.parent != null && transform.parent.parent.parent != null)
         {
-           // EXManager.Instance.OnClickMaterialCardFromDiscard(this);
-            return;
+            Debug.Log($"[DEBUG] 親: {transform.parent.name}, 祖父: {transform.parent.parent.name}, 曾祖父: {transform.parent.parent.parent.name}");
+
+            if (transform.parent.parent.parent.name.Contains("Discard"))
+            {
+                Debug.Log("[DEBUG] 墓地内カードと判定できた！（曾祖父がDiscard）");
+
+                if (EXManager.Instance.HasSelectedEXCard())
+                {
+                    Debug.Log("[DEBUG] EXカードも選ばれている！素材登録に進む！");
+                    EXManager.Instance.OnClickMaterialCardFromDiscard(this);
+                    return;
+                }
+                else
+                {
+                    Debug.LogWarning("[DEBUG] EXカードが選ばれていません！");
+                }
+            }
         }
+
+
 
 
         // ① 選択対象モード（イベント発動中）

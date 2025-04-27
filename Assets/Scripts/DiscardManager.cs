@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class DiscardManager : MonoBehaviour
 {
@@ -12,20 +12,21 @@ public class DiscardManager : MonoBehaviour
 
     public HandManager handManager;
     public CardPlayManager fieldManager;
-    public DiscardManager banishManager; // ‚Ü‚½‚Í BanishManager ‚É•ª‚¯‚Ä‚àOK
-    public DiscardUIController uiController; // Inspector‚Éİ’è
+    public DiscardManager banishManager; // ã¾ãŸã¯ BanishManager ã«åˆ†ã‘ã¦ã‚‚OK
+    public DiscardUIController uiController; // Inspectorã«è¨­å®š
 
 
     private CardView selectedCardView;
-    public Transform discardZone; // Content ‚ğ‚±‚±‚ÉƒAƒ^ƒbƒ`
+    public Transform discardZone; // Content ã‚’ã“ã“ã«ã‚¢ã‚¿ãƒƒãƒ
     public Transform banishZone;
     public GameObject cardPrefab;
+    public GameObject discardPanel;
 
     public void AddToDiscard(CardData cardData)
     {
         GameObject card = Instantiate(cardPrefab, discardZone);
         CardView view = card.GetComponent<CardView>();
-        view.SetCard(cardData, true); // — •\¦‚È‚ç false
+        view.SetCard(cardData, true); // è£è¡¨ç¤ºãªã‚‰ false
     }
 
     public void MoveCardViewToDiscard(CardView view)
@@ -34,14 +35,14 @@ public class DiscardManager : MonoBehaviour
         view.transform.localScale = Vector3.one;
         view.transform.rotation = Quaternion.identity;
 
-        Debug.Log($" g—pÏ‚İƒCƒxƒ“ƒg {view.GetCardData().cardName} ‚ğT‚¦º‚ÉˆÚ“®‚µ‚Ü‚µ‚½");
+        Debug.Log($" ä½¿ç”¨æ¸ˆã¿ã‚¤ãƒ™ãƒ³ãƒˆ {view.GetCardData().cardName} ã‚’æ§ãˆå®¤ã«ç§»å‹•ã—ã¾ã—ãŸ");
     }
 
     public void SelectCard(CardView card)
     {
         selectedCardView = card;
-        HighlightCard(card); // ‘I‘ğ’†‚ÌŒ©‚½–Ú‰‰o
-        ShowOptionsUI();     // u–ß‚·/o‚·/œŠOvƒ{ƒ^ƒ“‚ğ•\¦
+        HighlightCard(card); // é¸æŠä¸­ã®è¦‹ãŸç›®æ¼”å‡º
+        ShowOptionsUI();     // ã€Œæˆ»ã™/å‡ºã™/é™¤å¤–ã€ãƒœã‚¿ãƒ³ã‚’è¡¨ç¤º
     }
 
     public void ReturnToHand()
@@ -63,26 +64,26 @@ public class DiscardManager : MonoBehaviour
     public void BanishCard()
     {
         if (selectedCardView == null) return;
-        banishManager.AddToBanish(selectedCardView.GetCardData()); // œŠOƒ][ƒ“‚É’Ç‰Á
+        banishManager.AddToBanish(selectedCardView.GetCardData()); // é™¤å¤–ã‚¾ãƒ¼ãƒ³ã«è¿½åŠ 
         Destroy(selectedCardView.gameObject);
         selectedCardView = null;
     }
     private void HighlightCard(CardView card)
     {
-        // TODO: ˜g‚ğŒõ‚ç‚¹‚½‚èAF‚ğ•Ï‚¦‚½‚èi–¢À‘•‚È‚ç‹ó‚ÅOKj
-        Debug.Log($"ƒJ[ƒh‘I‘ğ: {card.GetCardData().cardName}");
+        // TODO: æ ã‚’å…‰ã‚‰ã›ãŸã‚Šã€è‰²ã‚’å¤‰ãˆãŸã‚Šï¼ˆæœªå®Ÿè£…ãªã‚‰ç©ºã§OKï¼‰
+        Debug.Log($"ã‚«ãƒ¼ãƒ‰é¸æŠ: {card.GetCardData().cardName}");
     }
 
     private void ShowOptionsUI()
     {
-        // TODO: ƒ{ƒ^ƒ“‚Ì•\¦‚È‚Çi‚ ‚Æ‚ÅUI‚ÆÚ‘±j
-        Debug.Log("‘€ìUI•\¦");
+        // TODO: ãƒœã‚¿ãƒ³ã®è¡¨ç¤ºãªã©ï¼ˆã‚ã¨ã§UIã¨æ¥ç¶šï¼‰
+        Debug.Log("æ“ä½œUIè¡¨ç¤º");
         uiController.Show();
     }
 
     public void AddToBanish(CardData cardData)
     {
-        GameObject card = Instantiate(cardPrefab, discardZone); // discardZone ‚ğœŠOƒ][ƒ“‚Éİ’è
+        GameObject card = Instantiate(cardPrefab, discardZone); // discardZone ã‚’é™¤å¤–ã‚¾ãƒ¼ãƒ³ã«è¨­å®š
         CardView view = card.GetComponent<CardView>();
         view.SetCard(cardData, true);
     }
@@ -122,6 +123,37 @@ public class DiscardManager : MonoBehaviour
         }
         return false;
     }
+    public void OpenDiscardPanel()
+    {
+        if (discardPanel != null)
+        {
+            discardPanel.SetActive(true);
+            Debug.Log(" å¢“åœ°ãƒ‘ãƒãƒ«ã‚’é–‹ãã¾ã—ãŸ");
+        }
+        else
+        {
+            Debug.LogWarning(" discardPanelãŒã‚¢ã‚¿ãƒƒãƒã•ã‚Œã¦ã„ã¾ã›ã‚“");
+        }
+    }
 
+    public void CloseDiscardPanel()
+    {
+        if (discardPanel != null)
+        {
+            discardPanel.SetActive(false);
+            Debug.Log(" å¢“åœ°ãƒ‘ãƒãƒ«ã‚’é–‰ã˜ã¾ã—ãŸ");
+        }
+    }
+    public void BanishCard(CardView view)
+    {
+        if (view == null) return;
+
+        // é™¤å¤–ã‚¾ãƒ¼ãƒ³ã¸ç§»å‹•
+        view.transform.SetParent(banishZone);
+        view.transform.localScale = Vector3.one;
+        view.transform.rotation = Quaternion.identity;
+
+        Debug.Log($" {view.cardData.cardName} ã‚’é™¤å¤–ã‚¾ãƒ¼ãƒ³ã«ç§»å‹•ã—ã¾ã—ãŸ");
+    }
 
 }

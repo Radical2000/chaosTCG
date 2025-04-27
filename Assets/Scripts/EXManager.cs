@@ -118,29 +118,33 @@ public class EXManager : MonoBehaviour
     public void TryEXSummonC(CardData exCard, FieldSlot targetSlot)
     {
         if (!ActionLimiter.Instance.CanEX()) return;
+        if (selectedMaterialCard == null)
+        {
+            Debug.LogWarning("❌ 墓地素材カードが選ばれていません");
+            return;
+        }
 
         var baseCard = targetSlot.currentCard;
         if (baseCard == null) return;
 
-        var targetInDiscard = DiscardManager.Instance.FindCardByName(exCard.exBaseA);
-        if (targetInDiscard == null)
-        {
-            Debug.LogWarning("墓地にEX素材カード（C）が見つかりません");
-            return;
-        }
-
-        DiscardManager.Instance.BanishCardData(targetInDiscard.GetCardData());
+        // --- ここで選んだ墓地カードを除外する！ ---
+        DiscardManager.Instance.BanishCard(selectedMaterialCard);
 
         ActionLimiter.Instance.UseEX();
+
+        // --- フィールドのベースカードをEXカードに上書きする ---
         baseCard.SetCard(exCard);
         baseCard.SetFaceUp(true);
         baseCard.SetRest(false);
         baseCard.InitHP();
 
-        Debug.Log($"C型EXユニット {exCard.cardName} を展開！");
-        selectedEXCard = null;
+        Debug.Log($"✅ C型EXユニット {exCard.cardName} を展開！");
 
+        // 後処理
+        selectedEXCard = null;
+        selectedMaterialCard = null;
     }
+
 
     public void OnClickOpenEXList()
     {
@@ -204,13 +208,18 @@ public class EXManager : MonoBehaviour
         // --- 素材カードが未選択なら ---
         if (selectedMaterialCard == null)
         {
-            // まだ素材カードが未選択なら、素材ハイライトだけする
-            HighlightMaterialCards(selectedEXCard);
-
-            // 注意メッセージ更新
-            UpdateInstruction("素材カードを選んでください");
-
-            return; // ← ここで一旦止める！
+            if (selectedEXCard.exType == EXType.AB型)
+            {
+                HighlightMaterialCards(selectedEXCard);
+                UpdateInstruction("素材カードを選んでください");
+            }
+            else if (selectedEXCard.exType == EXType.C型)
+            {
+                Debug.Log(" C型EX: 墓地パネルを開いて素材カードを選ばせます");
+                OpenDiscardPanelForC(); // ここが違う！！
+                UpdateInstruction("墓地から素材カードを選んでください");
+            }
+            return; // ← ここで止める（素材選び待ち）
         }
 
         // --- 素材カードが選ばれていたら、EX化する ---
@@ -223,14 +232,15 @@ public class EXManager : MonoBehaviour
             TryEXSummonC(selectedEXCard, slot);
         }
 
-        // 終わったらクリーンアップ
+        // --- EX化後、後片付け ---
         exPanel.gameObject.SetActive(false);
         foreach (var s in fieldSlots)
         {
             s.SetHighlight(false);
         }
-        SetInstructionVisible(false); // メッセージも非表示
+        SetInstructionVisible(false);
     }
+
 
 
 
@@ -430,5 +440,77 @@ public class EXManager : MonoBehaviour
             intructionText.text = message;
         }
     }
+    //墓地panelを開く用
+    public void OpenDiscardPanelForC()
+    {
+        Debug.Log(" C型EX用に墓地パネルを開きます");
+
+        // ここで墓地の素材カード(BaseA一致)をハイライトする
+        HighlightDiscardBaseCards();
+
+        // 墓地パネル自体を表示
+        DiscardManager.Instance.OpenDiscardPanel();
+    }
+
+    public void HighlightDiscardBaseCards()
+    {
+        if (selectedEXCard == null)
+        {
+            Debug.LogWarning("❌ EXカードが選ばれていません");
+            return;
+        }
+
+        string baseName = selectedEXCard.exBaseA;
+
+        foreach (Transform child in DiscardManager.Instance.discardZone)
+        {
+            CardView view = child.GetComponent<CardView>();
+            if (view != null && view.cardData != null)
+            {
+                if (view.cardData.cardName.Contains(baseName))
+                {
+                    view.SetHighlight(true);
+                    Debug.Log($" ハイライト: {view.cardData.cardName}");
+                }
+                else
+                {
+                    view.SetHighlight(false);
+                }
+            }
+        }
+    }
+    public void OnClickMaterialCardFromDiscard(CardView card)
+    {
+        if (selectedEXCard == null)
+        {
+            Debug.LogWarning("❌ EXカードが選ばれていません");
+            return;
+        }
+
+        if (card == null || card.cardData == null)
+        {
+            Debug.LogWarning("❌ クリックされたカードが無効です");
+            return;
+        }
+
+        string baseName = selectedEXCard.exBaseA;
+
+        if (card.cardData.cardName.Contains(baseName))
+        {
+            selectedMaterialCard = card;
+            Debug.Log($"✅ 墓地素材カード選択完了: {card.cardData.cardName}");
+
+            // クリックしたら墓地パネルを閉じる！
+            DiscardManager.Instance.CloseDiscardPanel();
+
+            // スロット選択の待ち状態に戻る（再度スロットをクリックしてEX化へ）
+            UpdateInstruction("出すスロットをもう一度選んでください");
+        }
+        else
+        {
+            Debug.LogWarning($"❌ {card.cardData.cardName} は素材として無効です（必要: {baseName}）");
+        }
+    }
+
 }
 
