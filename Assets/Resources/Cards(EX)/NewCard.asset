@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0257021def3236458968234769c83c8, type: 3}
+  m_Name: NewCard
+  m_EditorClassIdentifier: 
+  cardName: "\u6642\u3092\u523B\u3080 \"A\"&\"B\""
+  cardType: 0
+  cardImage: {fileID: 0}
+  description: "A\u3068B\u3092\u5408\u308F\u305B\u3066\u53EC\u559A\u3055\u308C\u308B\u5F37\u529B\u306AEX\u30E6\u30CB\u30C3\u30C8"
+  costType: 0
+  costAmount: 0
+  power: 7
+  support: 6
+  isPartner: 0
+  hasPenetrate: 0
+  exTarget: {fileID: 0}
+  effectScriptName: 
+  isUnit: 1
+  linkedEvent: {fileID: 0}
+  isEX: 1
+  exType: 1
+  exBaseA: '"A"'
+  exBaseB: '"B"'

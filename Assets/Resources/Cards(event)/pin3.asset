@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca7294954e6b678438f6c4dd5dda58d4, type: 3}
+  m_Name: pin3
+  m_EditorClassIdentifier: 
+  eventName: pin 3
+  description: 
+  eventTiming: 0
+  effectType: 9
+  amount: 3
+  targetType: 4
