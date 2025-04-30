@@ -23,6 +23,10 @@ MonoBehaviour:
   isPartner: 0
   hasPenetrate: 0
   exTarget: {fileID: 0}
+  currentLevel: 1
+  exLevelUpAtkBoost: 2
+  exLevelUpHpBoost: 1
+  canLevelUp: 0
   effectScriptName: 
   isUnit: 1
   linkedEvent: {fileID: 0}

@@ -25,6 +25,19 @@ public class EXManager : MonoBehaviour
     public CardData selectedEXCard;
     public CardView selectedMaterialCard;
 
+    public Transform zyogaizone;
+
+    // EX化 or レベルアップを選ぶパネル
+    public UnityEngine.UI.Button exButton;
+    public UnityEngine.UI.Button levelUpButton;
+    // 今選んでいるEXカードを一時記憶
+    private CardData pendingEXCard;
+
+    private CardView selectedLevelUpMaterial; // 素材カード
+    private CardData selectedLevelUpEX;       // EXカード
+    public enum MaterialUseMode { None, EX, LevelUp }
+    public MaterialUseMode materialMode = MaterialUseMode.None;
+
     public bool CanEXFromAB(CardData exCard)
     {
         foreach (var slot in fieldSlots)
@@ -148,10 +161,32 @@ public class EXManager : MonoBehaviour
 
     public void OnClickOpenEXList()
     {
-        ShowEXList();
-        SetInstructionVisible(true);
-        UpdateInstruction("EXユニットを選んでください");
+        if (exPanel == null)
+        {
+            Debug.LogWarning("exPanelがアタッチされていません");
+            return;
+        }
+
+        bool isActive = exPanel.gameObject.activeSelf; // ← ここ重要！
+
+        if (isActive)
+        {
+            // 開いてたら閉じる
+            exPanel.gameObject.SetActive(false); // ← ここも重要！
+            SetInstructionVisible(false); // 中央メッセージも非表示
+            Debug.Log("EXリストパネルを閉じました");
+        }
+        else
+        {
+            // 閉じてたら開く
+            ShowEXList();
+            SetInstructionVisible(true);
+            UpdateInstruction("EXユニットを選んでください");
+            Debug.Log("EXリストパネルを開きました");
+        }
     }
+
+
 
     public void ShowEXList()
     {
@@ -191,21 +226,43 @@ public class EXManager : MonoBehaviour
         selectedEXCard = selected;
         Debug.Log($"✅ EXカード選択完了：{selectedEXCard.cardName}");
 
+        // EXユニットがすでにフィールドにいるなら、レベルアップに進む
+        if (FieldHasSameEX(selectedEXCard))
+        {
+            Debug.Log("✅ フィールドに同じEXカードがいるためレベルアップに進みます");
+            StartEXLevelUp(selectedEXCard);
+            return;
+        }
+
+        // それ以外は従来のEX召喚処理へ
         HighlightValidBaseSlots();
         HighlightRequiredMaterials(selectedEXCard);
-
         UpdateInstruction("出す場所を選んでください");
     }
 
+
     public void OnClickSlotForEX(FieldSlot slot)
     {
+        Debug.Log("OnClickSlotForEXに入った");
+        Debug.Log($"[DEBUG] materialMode = {materialMode}, selectedMaterialCard = {selectedMaterialCard?.cardData.cardName}");
+
+
         if (selectedEXCard == null)
         {
             Debug.LogWarning("EXカードが選択されていません");
             return;
         }
 
-        // --- 素材カードが未選択なら ---
+        // ✅ レベルアップモードの優先処理（素材カードありき）
+        if (materialMode == MaterialUseMode.LevelUp && selectedMaterialCard != null)
+        {
+            Debug.Log("🟢 レベルアップ処理に入ります");
+            TryLevelUp(slot, selectedMaterialCard);
+            CleanupEXProcess();
+            return;
+        }
+
+        // 素材カードが未選択なら
         if (selectedMaterialCard == null)
         {
             if (selectedEXCard.exType == EXType.AB型)
@@ -215,32 +272,33 @@ public class EXManager : MonoBehaviour
             }
             else if (selectedEXCard.exType == EXType.C型)
             {
-                Debug.Log(" C型EX: 墓地パネルを開いて素材カードを選ばせます");
-                OpenDiscardPanelForC(); // ここが違う！！
+                OpenDiscardPanelForC();
                 UpdateInstruction("墓地から素材カードを選んでください");
             }
-            return; // ← ここで止める（素材選び待ち）
+            return;
         }
 
-        // --- 素材カードが選ばれていたら、EX化する ---
-        if (selectedEXCard.exType == EXType.AB型)
+        // EX化処理
+        if (materialMode == MaterialUseMode.EX)
         {
-            TryEXSummonAB(selectedEXCard, slot);
-        }
-        else if (selectedEXCard.exType == EXType.C型)
-        {
-            TryEXSummonC(selectedEXCard, slot);
+            if (selectedEXCard.exType == EXType.AB型)
+                TryEXSummonAB(selectedEXCard, slot);
+            else if (selectedEXCard.exType == EXType.C型)
+                TryEXSummonC(selectedEXCard, slot);
         }
 
-        // --- EX化後、後片付け ---
-        exPanel.gameObject.SetActive(false);
-        foreach (var s in fieldSlots)
-        {
-            s.SetHighlight(false);
-        }
-        SetInstructionVisible(false);
+        CleanupEXProcess(); // クリーンアップ共通関数
     }
 
+    private void CleanupEXProcess()
+    {
+        exPanel.gameObject.SetActive(false);
+        foreach (var s in fieldSlots) s.SetHighlight(false);
+        SetInstructionVisible(false);
+        materialMode = MaterialUseMode.None;
+        selectedMaterialCard = null;
+        selectedEXCard = null;
+    }
 
 
 
@@ -315,11 +373,19 @@ public class EXManager : MonoBehaviour
             foreach (Transform cardObj in HandManager.Instance.handZone)
             {
                 CardView view = cardObj.GetComponent<CardView>();
-                if (view != null && view.cardData.cardName.Contains(needed))
+                if (view != null && view.cardData != null)
                 {
-                    view.SetHighlight(true);
+                    if (view.cardData.cardName.Contains(needed))
+                    {
+                        view.SetHighlight(true);
+                    }
+                    else
+                    {
+                        view.SetHighlight(false);
+                    }
                 }
             }
+
         }
 
         // C型 → 墓地の同名カードをハイライト
@@ -354,30 +420,22 @@ public class EXManager : MonoBehaviour
             slot.currentCard.cardData.cardName.Contains(baseB));
 
         string expected = null;
+        if (isAonField) expected = baseB;
+        else if (isBonField) expected = baseA;
 
-        if (isAonField)
-            expected = baseB;
-        else if (isBonField)
-            expected = baseA;
-
-        if (expected == null)
+        if (expected == null || !card.cardData.cardName.Contains(expected))
         {
-            Debug.LogWarning("❌ フィールドにEXベースカードが存在しません");
+            Debug.LogWarning($"❌ {card.cardData.cardName} は素材として無効です（期待: {expected}）");
             return;
         }
 
-        if (card.cardData.cardName.Contains(expected))
-        {
-            selectedMaterialCard = card;
-            Debug.Log($"✅ 素材カードとして {card.cardData.cardName} を選択しました");
+        selectedMaterialCard = card;
+        materialMode = MaterialUseMode.EX;
+        Debug.Log($"✅ EX素材カードとして {card.cardData.cardName} を選択しました");
 
-            HighlightValidBaseSlots(); // ベーススロットを再度光らせる
-        }
-        else
-        {
-            Debug.LogWarning($"❌ {card.cardData.cardName} は素材として無効です（期待: {expected}）");
-        }
+        HighlightValidBaseSlots();
     }
+
 
 
     public void HighlightMaterialCards(CardData exCard)
@@ -454,31 +512,35 @@ public class EXManager : MonoBehaviour
 
     public void HighlightDiscardBaseCards()
     {
-        if (selectedEXCard == null)
-        {
-            Debug.LogWarning("❌ EXカードが選ばれていません");
-            return;
-        }
-
-        string baseName = selectedEXCard.exBaseA;
-
+        // まず墓地のカードだけハイライト
         foreach (Transform child in DiscardManager.Instance.discardZone)
         {
             CardView view = child.GetComponent<CardView>();
-            if (view != null && view.cardData != null)
+            if (view != null && view.cardData != null &&
+                view.cardData.cardName.Contains(selectedEXCard.exBaseA))
             {
-                if (view.cardData.cardName.Contains(baseName))
-                {
-                    view.SetHighlight(true);
-                    Debug.Log($" ハイライト: {view.cardData.cardName}");
-                }
-                else
-                {
-                    view.SetHighlight(false);
-                }
+                view.SetHighlight(true);
+                Debug.Log($"🔵 ハイライト: {view.cardData.cardName}");
+            }
+            else if (view != null)
+            {
+                view.SetHighlight(false);
             }
         }
+
+        // 除外ゾーンのカード全部ハイライト解除
+        foreach (Transform child in DiscardManager.Instance.banishContent)
+        {
+            CardView view = child.GetComponent<CardView>();
+            if (view != null)
+            {
+                view.SetHighlight(false);
+            }
+        }
+
     }
+
+
     public void OnClickMaterialCardFromDiscard(CardView card)
     {
         if (selectedEXCard == null)
@@ -498,6 +560,7 @@ public class EXManager : MonoBehaviour
         if (card.cardData.cardName.Contains(baseName))
         {
             selectedMaterialCard = card;
+            materialMode = MaterialUseMode.EX; // 🔧 これを追加！
             Debug.Log($"✅ 墓地素材カード選択完了: {card.cardData.cardName}");
 
             // クリックしたら墓地パネルを閉じる！
@@ -511,6 +574,282 @@ public class EXManager : MonoBehaviour
             Debug.LogWarning($"❌ {card.cardData.cardName} は素材として無効です（必要: {baseName}）");
         }
     }
+
+
+
+    private void StartEXSummon(CardData exCard)
+    {
+        selectedEXCard = exCard;
+
+        // ベースカード（素材）をハイライト
+        HighlightValidBaseSlots();
+
+        // プレイヤーに指示
+        UpdateInstruction("出す場所を選んでください");
+    }
+    // フィールドに同じEXがいるかチェック
+    private bool FieldHasSameEX(CardData exCard)
+    {
+        foreach (var slot in fieldSlots)
+        {
+            if (slot.currentCard != null && slot.currentCard.cardData == exCard)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    // フィールド上の対象ユニットにレベルアップ処理を行う
+    public void TryLevelUp(FieldSlot targetSlot, CardView materialCard)
+    {
+        Debug.Log("TryLevelUpに入った");
+        Debug.Log($"🟢 TryLevelUp called on {targetSlot.currentCard?.cardData.cardName}");
+        Debug.Log($"🧪 TryLevelUp対象: {materialCard.cardData.cardName}, isEX: {materialCard.cardData.isEX}");
+
+        if (targetSlot == null || targetSlot.currentCard == null)
+        {
+            Debug.LogWarning("❌ 対象スロットまたはユニットが無効です");
+            return;
+        }
+
+        var unitView = targetSlot.currentCard;
+
+        if (!unitView.cardData.isEX)
+        {
+            Debug.LogWarning("❌ このユニットはEXユニットではありません");
+            return;
+        }
+
+        if (!HandManager.Instance.RemoveCard(materialCard))
+        {
+            Debug.LogWarning("❌ 手札に素材カードがありません");
+            return;
+        }
+
+        DiscardManager.Instance.AddToDiscard(materialCard.cardData);
+
+        unitView.currentLevel += 1;
+
+        unitView.accumulatedAtkBoost += unitView.cardData.exLevelUpAtkBoost;
+        unitView.accumulatedHpBoost += unitView.cardData.exLevelUpHpBoost;
+        unitView.power += unitView.cardData.exLevelUpAtkBoost;
+        unitView.permSupportBoost += unitView.cardData.exLevelUpHpBoost;
+
+        unitView.InitHP(); // permSupportBoostを考慮してhpMax再設定
+        unitView.SetRest(false);
+        unitView.SetFaceUp(true);
+        unitView.UpdatePowerText();
+        unitView.UpdateHPText();
+        unitView.UpdateLevelText();
+
+        Debug.Log($"✅ {unitView.cardData.cardName} がレベル {unitView.currentLevel} にレベルアップしました");
+
+        selectedMaterialCard = null;
+        selectedEXCard = null;
+        SetInstructionVisible(false);
+    }
+
+
+    private void StartEXLevelUp(CardData exCard)
+    {
+        Debug.Log($"EXレベルアップモードに進みます: {exCard.cardName}");
+        selectedEXCard = exCard;
+        selectedLevelUpEX = exCard;
+        materialMode = MaterialUseMode.LevelUp;
+
+        // C型かAB型かで処理を分ける
+        if (exCard.exType == EXType.C型)
+        {
+            string baseName = exCard.exBaseA;
+            foreach (Transform child in HandManager.Instance.handZone)
+            {
+                CardView view = child.GetComponent<CardView>();
+                if (view != null && view.cardData != null)
+                {
+                    view.SetHighlight(view.cardData.cardName.Contains(baseName));
+                }
+            }
+        }
+        else // AB型
+        {
+            string nameA = exCard.exBaseA;
+            string nameB = exCard.exBaseB;
+            foreach (Transform child in HandManager.Instance.handZone)
+            {
+                CardView view = child.GetComponent<CardView>();
+                if (view != null && view.cardData != null)
+                {
+                    view.SetHighlight(view.cardData.cardName.Contains(nameA) || view.cardData.cardName.Contains(nameB));
+                }
+            }
+        }
+
+        UpdateInstruction("レベルアップ素材カードを手札から選んでください");
+    }
+
+
+
+
+    private void HighlightLevelUpMaterials(CardData exCard)
+    {
+        // 手札のカードを一旦すべて非ハイライト
+        foreach (Transform child in HandManager.Instance.handZone)
+        {
+            CardView view = child.GetComponent<CardView>();
+            if (view != null) view.SetHighlight(false);
+        }
+
+        // exBaseA または exBaseB を含むカードをハイライト
+        foreach (Transform child in HandManager.Instance.handZone)
+        {
+            CardView view = child.GetComponent<CardView>();
+            if (view != null && view.cardData != null)
+            {
+                if (view.cardData.cardName.Contains(exCard.exBaseA) ||
+                    view.cardData.cardName.Contains(exCard.exBaseB))
+                {
+                    view.SetHighlight(true);
+                    Debug.Log($"🔶 素材候補: {view.cardData.cardName}");
+                }
+            }
+        }
+    }
+    public void OnClickLevelUpMaterialCard(CardView card)
+    {
+        if (materialMode != MaterialUseMode.LevelUp)
+        {
+            Debug.LogWarning("レベルアップ素材選択モードではありません");
+            return;
+        }
+
+        selectedMaterialCard = card;
+        Debug.Log($"🟢 EXレベルアップ素材カードを選択しました: {card.cardData.cardName}");
+
+        // フィールド上の対象EXユニットをハイライト
+        HighlightLevelUpTargets(selectedEXCard);
+
+        UpdateInstruction("レベルアップさせたいユニットを選んでください");
+    }
+
+
+    public void HighlightFieldEXUnitsForLevelUp()
+    {
+        if (selectedEXCard == null || selectedMaterialCard == null)
+        {
+            Debug.LogWarning("❌ EXカードまたは素材カードが未選択です");
+            return;
+        }
+
+        string baseA = selectedEXCard.exBaseA;
+        string baseB = selectedEXCard.exBaseB;
+        string materialName = selectedMaterialCard.cardData.cardName;
+
+        foreach (var slot in fieldSlots)
+        {
+            if (slot.currentCard == null) continue;
+
+            var view = slot.currentCard;
+
+            // EXカードで、かつ同じカードで、かつまだレベルアップ可能なやつだけ
+            if (view.cardData == selectedEXCard && view.CanLevelUp())
+            {
+                if (materialName.Contains(baseA) || materialName.Contains(baseB))
+                {
+                    slot.SetHighlight(true);
+                }
+            }
+        }
+    }
+
+    public bool IsWaitingForLevelUpMaterial()
+    {
+        return materialMode == MaterialUseMode.LevelUp;
+    }
+
+
+    public void OnSelectLevelUpMaterial(CardView card)
+    {
+        Debug.Log($"🟢 素材カード選択完了: {card.cardData.cardName}");
+
+        // C型かAB型かで素材の条件を分ける
+        if (selectedLevelUpEX.exType == EXType.C型)
+        {
+            // 手札のカード名がEXカードのベース名（＝同名）を含むか
+            string baseName = selectedLevelUpEX.exBaseA;
+            if (card.cardData.cardName.Contains(baseName))
+            {
+                selectedMaterialCard = card;
+                Debug.Log($"[DEBUG] selectedMaterialCard now set to: {selectedMaterialCard.cardData.cardName}");
+                HighlightLevelUpTargets(selectedLevelUpEX);
+                UpdateInstruction("レベルアップさせるEXユニットを選んでください");
+            }
+            else
+            {
+                Debug.LogWarning($"❌ {card.cardData.cardName} はC型の素材として無効です（必要: {baseName}）");
+            }
+        }
+        else
+        {
+            // AB型
+            string baseA = selectedLevelUpEX.exBaseA;
+            string baseB = selectedLevelUpEX.exBaseB;
+
+            if (card.cardData.cardName.Contains(baseA) || card.cardData.cardName.Contains(baseB))
+            {
+                selectedMaterialCard = card;
+                Debug.Log($"[DEBUG] selectedMaterialCard now set to: {selectedMaterialCard.cardData.cardName}");
+                HighlightLevelUpTargets(selectedLevelUpEX);
+                UpdateInstruction("レベルアップさせるEXユニットを選んでください");
+            }
+            else
+            {
+                Debug.LogWarning($"❌ {card.cardData.cardName} は素材として無効です（必要: {baseA} or {baseB}）");
+            }
+        }
+    }
+
+
+    public bool IsWaitingForLevelUpTarget()
+    {
+        return selectedLevelUpMaterial != null && selectedLevelUpEX != null;
+    }
+    public CardView GetSelectedLevelUpMaterial()
+    {
+        return selectedMaterialCard;
+    }
+    public void OnSelectLevelUpTarget(FieldSlot slot)
+    {
+        if (slot.currentCard == null || slot.currentCard.cardData != selectedLevelUpEX)
+        {
+            Debug.LogWarning("❌ このスロットには対象のEXユニットがいません");
+            return;
+        }
+
+        // 実行
+        TryLevelUp(slot, selectedLevelUpMaterial);
+
+        // 後片付け
+        selectedLevelUpMaterial = null;
+        selectedLevelUpEX = null;
+    }
+    private void HighlightLevelUpTargets(CardData exCard)
+    {
+        foreach (var slot in fieldSlots)
+        {
+            if (slot.currentCard != null &&
+                slot.currentCard.cardData == exCard)
+            {
+                slot.SetHighlight(true);
+            }
+            else
+            {
+                slot.SetHighlight(false);
+            }
+        }
+    }
+
 
 }
 

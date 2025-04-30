@@ -14,7 +14,7 @@ public class DiscardManager : MonoBehaviour
     public CardPlayManager fieldManager;
     public DiscardManager banishManager; // または BanishManager に分けてもOK
     public DiscardUIController uiController; // Inspectorに設定
-
+    public Transform banishContent;
 
     private CardView selectedCardView;
     public Transform discardZone; // Content をここにアタッチ
@@ -125,14 +125,19 @@ public class DiscardManager : MonoBehaviour
     }
     public void OpenDiscardPanel()
     {
-        if (discardPanel != null)
+        bool isActive = discardPanel.activeSelf;
+        if (isActive)
         {
-            discardPanel.SetActive(true);
-            Debug.Log(" 墓地パネルを開きました");
+            // もし開いてたら閉じる
+            discardPanel.SetActive(false);
+            Debug.Log("墓地パネルを閉じました");
         }
         else
         {
-            Debug.LogWarning(" discardPanelがアタッチされていません");
+            // もし閉じてたら開く
+            discardPanel.SetActive(true);
+            Debug.Log("墓地パネルを開きました");
+            ClearAllBanishHighlights();
         }
     }
 
@@ -155,5 +160,18 @@ public class DiscardManager : MonoBehaviour
 
         Debug.Log($" {view.cardData.cardName} を除外ゾーンに移動しました");
     }
-
+    // 除外ゾーンのハイライトをすべて消す
+    private void ClearAllBanishHighlights()
+    {
+        Debug.Log("ClearAllBanishHighlights()");
+        foreach (Transform child in banishContent)
+        {
+            CardView view = child.GetComponent<CardView>();
+            if (view != null)
+            {
+                view.SetHighlight(false);
+            }
+        }
+    }
+    
 }

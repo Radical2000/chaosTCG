@@ -125,6 +125,25 @@ public class HandManager : MonoBehaviour
         return null;
     }
 
+    // 手札から指定したCardViewを削除する
+    public bool RemoveCard(CardView cardView)
+    {
+        if (cardView == null)
+        {
+            Debug.LogWarning(" RemoveCardにnullが渡されました");
+            return false;
+        }
+
+        // 親がhandZoneかチェック（手札にあるか）
+        if (cardView.transform.parent != handZone)
+        {
+            Debug.LogWarning(" このカードは手札にありません！");
+            return false;
+        }
+
+        Destroy(cardView.gameObject);
+        return true;
+    }
 
 
 }

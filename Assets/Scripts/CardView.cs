@@ -18,7 +18,7 @@ public class CardView : MonoBehaviour
     public int tempDamage = 0;
     public int tempSupportBoost = 0;
     public int permSupportBoost = 0;
-
+    public int power;
     public int maxHP;
     public int currentHP;
 
@@ -33,8 +33,14 @@ public class CardView : MonoBehaviour
     public TextMeshProUGUI hpText;
     public GameObject backside;
     public TextMeshProUGUI descriptionText;
+    public TextMeshProUGUI levelText;
+
 
     public CardData cardData;
+    //EXステータス
+    public int currentLevel = 1;
+    public int accumulatedAtkBoost = 0;
+    public int accumulatedHpBoost = 0;
 
     private void Start()
     {
@@ -48,13 +54,15 @@ public class CardView : MonoBehaviour
     {
         cardData = data;
         InitHP();
-
+        power=cardData.power;
         if (nameText != null) nameText.text = data.cardName;
         if (descriptionText != null) descriptionText.text = data.description;
         if (powerText != null) powerText.text = GetCurrentPower().ToString();
         if (hpText != null) hpText.text = $"{currentHP}/{maxHP}";
         if (cardImage != null && data.cardImage != null) cardImage.sprite = data.cardImage;
         if (backside != null) backside.SetActive(!faceUp);
+        if (levelText != null) levelText.text = $"Lv{cardData.currentLevel}";
+
     }
 
     public void InitHP()
@@ -73,7 +81,7 @@ public class CardView : MonoBehaviour
     public void UpdatePowerText()
     {
         if (powerText != null)
-            powerText.text = GetCurrentPower().ToString();
+            powerText.text = power.ToString(); 
     }
 
     public void UpdateHPText()
@@ -157,32 +165,36 @@ public class CardView : MonoBehaviour
         Debug.Log($"🟡 OnClickActionButton 実行！clickMode = {clickMode}");
         Debug.Log($"[DEBUG] 親の名前: {transform.parent.name}");
 
-        // EX用素材カード選択モード
-        if (transform.parent.name == "PlayerHand" )
+        // EXレベルアップ用素材カードの選択
+        // EXレベルアップ用素材カードの選択
+        if (transform.parent.name == "PlayerHand")
         {
-            if (EXManager.Instance.HasSelectedEXCard())
+            /// EXレベルアップ用素材カードの選択
+            if (transform.parent.name == "PlayerHand")
             {
-               EXManager.Instance.OnClickMaterialCard(this);
-                return;
+                // ✅ ① レベルアップ素材選択（最優先でチェック）
+                if (EXManager.Instance.IsWaitingForLevelUpMaterial())
+                {
+                    Debug.Log($"🟢 レベルアップ素材として {cardData.cardName} を選択しました");
+                    EXManager.Instance.OnSelectLevelUpMaterial(this);
+                    return;
+                }
+
+                // ✅ ② EX素材選択（materialMode が EX のときだけ）
+                if (EXManager.Instance.HasSelectedEXCard() && EXManager.Instance.materialMode == EXManager.MaterialUseMode.EX)
+                {
+                    Debug.Log($"🟢 EX素材カードとして {cardData.cardName} を選択しました");
+                    EXManager.Instance.OnClickMaterialCard(this);
+                    return;
+                }
             }
-            else
-            {
-                Debug.Log("EXManager.Instance.HasSelectedEXCard()でない");
-            }
-            
         }
 
+        // EXカード（EXUnitPanel）の選択処理
         if (transform.parent.name == "EXUnitPanel")
         {
             Debug.Log($"🔷 EXカード {cardData.cardName} を選択しました");
-
-            EXManager.Instance.selectedEXCard = cardData;
-
-            if (EXManager.Instance.selectedEXCard != null)
-                Debug.Log($"✅ セット成功: {EXManager.Instance.selectedEXCard.cardName}");
-
-            EXManager.Instance.HighlightValidBaseSlots();
-
+            EXManager.Instance.OnSelectEXCard(cardData); // ✅ これが必要！
             return;
         }
         // ▼ EX C型用：墓地素材クリック
@@ -325,5 +337,50 @@ public class CardView : MonoBehaviour
     {
         return isHighlighted;
     }
-  
+
+    /*
+     ここからレベルアップ処理
+     */
+    // レベルアップ権を持っているかどうか（EX or パートナー）
+    public bool CanLevelUp()
+    {
+        return cardData.isEX || cardData.isPartner;
+    }
+
+    // レベルアップ実行処理
+    public void LevelUp()
+    {
+        if (!CanLevelUp())
+        {
+            Debug.LogWarning($"{cardData.cardName} はレベルアップできません！");
+            return;
+        }
+
+        currentLevel += 1;
+        accumulatedAtkBoost += cardData.exLevelUpAtkBoost;
+        accumulatedHpBoost += cardData.exLevelUpHpBoost;
+
+        // ステータス再計算
+        UpdatePowerText();
+        UpdateHPText();
+
+        // 表＆スタンドに戻す
+        SetFaceUp(true);
+        SetRest(false);
+
+        // HPも最大まで回復
+        currentHP = GetEffectiveSupport();
+        UpdateHPText();
+
+        Debug.Log($"✅ {cardData.cardName} がレベル{currentLevel}になりました！ 攻撃力+{accumulatedAtkBoost}, HP+{accumulatedHpBoost}");
+        if (levelText != null) levelText.text = $"Lv{cardData.currentLevel}";
+
+    }
+    public void UpdateLevelText()
+    {
+        if (levelText != null)
+            levelText.text = $"Lv{currentLevel}";
+    }
+
+
 }

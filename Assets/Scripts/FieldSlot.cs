@@ -41,6 +41,15 @@ public class FieldSlot : MonoBehaviour
     }
     public void OnClickSlot()
     {
+        if (EXManager.Instance != null && EXManager.Instance.IsWaitingForLevelUpTarget())
+        {
+            CardView selectedMaterial = EXManager.Instance.GetSelectedLevelUpMaterial();
+            if (currentCard != null && selectedMaterial != null)
+            {
+                EXManager.Instance.TryLevelUp(this, selectedMaterial);
+                return;
+            }
+        }
         if (EXManager.Instance != null && EXManager.Instance.HasSelectedEXCard())
         {
             EXManager.Instance.OnClickSlotForEX(this);

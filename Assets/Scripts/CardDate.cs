@@ -19,6 +19,13 @@ public class CardData : ScriptableObject
     public bool hasPenetrate; // 貫通持ちかどうか
     public CardData exTarget; // EX先
 
+    // レベルアップ管理用
+    public int currentLevel = 1; // 最初はLv1スタート
+    public int exLevelUpAtkBoost = 0;
+    public int exLevelUpHpBoost = 0;
+    // レベルアップできるかどうか
+    public bool canLevelUp = false;
+
     // イベント・セット用（必要に応じて）
     public string effectScriptName; // 実行スクリプトの名前など
     public bool isUnit; // true: ユニット, false: イベント
@@ -29,6 +36,8 @@ public class CardData : ScriptableObject
     public EXType exType = EXType.None;// このカードがEXカードかどうか
     public string exBaseA;           // EX化条件となるベースカードAの名前（例："A"）
     public string exBaseB;           // EX化条件となる素材カードBの名前（例："B"）
+
+
 
     public enum EXType
     {
