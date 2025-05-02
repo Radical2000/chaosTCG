@@ -23,6 +23,13 @@ MonoBehaviour:
   isPartner: 0
   hasPenetrate: 0
   exTarget: {fileID: 11400000, guid: 63ae1497b87fc594498ed1ae9f71f20e, type: 2}
+  illustration: {fileID: 0}
+  summonCostTypes: 02000000
+  summonCostAmounts: 03000000
+  currentLevel: 1
+  exLevelUpAtkBoost: 0
+  exLevelUpHpBoost: 0
+  canLevelUp: 0
   effectScriptName: 
   isUnit: 1
   linkedEvent: {fileID: 0}

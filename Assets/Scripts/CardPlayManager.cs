@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -7,106 +7,64 @@ public class CardPlayManager : MonoBehaviour
     public Transform fieldZone;
     public HandManager handManager;
     public GameObject cardPrefab;
-    
-
-
-    public bool CanPlayCard(CardData card)
-    {
-        switch (card.costType)
-        {
-            case CardCostType.— ƒLƒƒƒ‰‚ğ•\‚É:
-                return fieldZone.GetComponentsInChildren<CardView>().Any(c => !c.isFaceUp);
-            case CardCostType.èD‚É–ß‚µ‚Ä“oê:
-            case CardCostType.ƒLƒƒƒ‰‚ğÌ‚Ä‚Ä“oê:
-                return fieldZone.childCount > 0;
-            case CardCostType.èD‚ğÌ‚Ä‚ÄT‚¦‚É‘—‚é:
-            case CardCostType.èD‚ğ–‡Ì‚Ä‚Ä”­“®:
-                return handManager.HandCount >= card.costAmount;
-            case CardCostType.–³‚µ:
-            default:
-                return true;
-        }
-    }
 
     public void PlayCard(CardView cardView)
     {
         CardData card = cardView.GetCardData();
-        if (!CanPlayCard(cardView.GetCardData()))
-        {
-            Debug.Log("ƒRƒXƒgğŒ‚ª–‚½‚³‚ê‚Ä‚¢‚Ü‚¹‚ñI");
-            return;
-        }
+
         if (cardView.transform.parent.name != "PlayerHand")
         {
-            Debug.LogWarning(" èDˆÈŠO‚ÌƒJ[ƒh‚Íê‚Éo‚¹‚Ü‚¹‚ñI");
+            Debug.LogWarning("æ‰‹æœ­ä»¥å¤–ã®ã‚«ãƒ¼ãƒ‰ã¯å ´ã«å‡ºã›ã¾ã›ã‚“ï¼");
             return;
         }
+
         if (!ActionLimiter.Instance.CanSummon())
         {
-            Debug.LogWarning("‚±‚Ìƒ^[ƒ“‚Ì¢Š«‚Í‚·‚Å‚É1‰ñs‚í‚ê‚Ü‚µ‚½I");
+            Debug.LogWarning("ã“ã®ã‚¿ãƒ¼ãƒ³ã®å¬å–šã¯ã™ã§ã«1å›è¡Œã‚ã‚Œã¾ã—ãŸï¼");
             return;
         }
+
         if (IsSameNameCardOnField(card))
         {
-            Debug.Log(" “¯–¼ƒJ[ƒh‚ªê‚É‚ ‚é‚½‚ß¢Š«‚Å‚«‚Ü‚¹‚ñ");
+            Debug.Log("åŒåã‚«ãƒ¼ãƒ‰ãŒå ´ã«ã‚ã‚‹ãŸã‚å¬å–šã§ãã¾ã›ã‚“");
             return;
         }
 
-        ActionLimiter.Instance.UseSummon(); // ? §ŒÀƒJƒEƒ“ƒg
+        // âœ… ã‚³ã‚¹ãƒˆåˆ¤å®šãƒ»æ”¯æ‰•ã„ï¼ˆæ–°æ–¹å¼ï¼‰
+        var costList = card.GetSummonCostRequirements();
+        foreach (var cost in costList)
+        {
+            if (!cost.isPayable())
+            {
+                Debug.LogWarning($"ã‚³ã‚¹ãƒˆ {cost.type} ã‚’æ”¯æ‰•ãˆã¾ã›ã‚“ï¼");
+                return;
+            }
+        }
+        foreach (var cost in costList)
+        {
+            cost.doPay();
+        }
 
-        PayCost(card);
+        ActionLimiter.Instance.UseSummon(); // åˆ¶é™ã‚«ã‚¦ãƒ³ãƒˆ
 
-        // š ƒXƒƒbƒg‚É”z’u‚·‚é‚Ì‚Í OnClickSlot ‘¤‚Å‚â‚éI
+        // â˜… ã‚¹ãƒ­ãƒƒãƒˆã«é…ç½®ã™ã‚‹ã®ã¯ OnClickSlot å´ã§ã‚„ã‚‹ï¼
         FieldManager.Instance.selectedCardToSummon = cardView;
-        Debug.Log("? PlayCard ˆ—Š®—¹ ¨ ƒXƒƒbƒg‚ğƒNƒŠƒbƒN‚µ‚Ä‚­‚¾‚³‚¢I");
-    }
-    
-
-    private void PayCost(CardData card)
-    {
-        switch (card.costType)
-        {
-            case CardCostType.èD‚ğÌ‚Ä‚ÄT‚¦‚É‘—‚é:
-            case CardCostType.èD‚ğ–‡Ì‚Ä‚Ä”­“®:
-                handManager.DiscardFromHand(card.costAmount);
-                break;
-            case CardCostType.— ƒLƒƒƒ‰‚ğ•\‚É:
-                FlipOneFacedownCard();
-                break;
-            case CardCostType.èD‚É–ß‚µ‚Ä“oê:
-                ReturnCharacterToHand(); // ‰¼ˆ—
-                break;
-            case CardCostType.ƒLƒƒƒ‰‚ğÌ‚Ä‚Ä“oê:
-                SacrificeRandomFieldCharacter(); // ‰¼ˆ—
-                break;
-        }
+        Debug.Log("PlayCard å®Œäº† â†’ ã‚¹ãƒ­ãƒƒãƒˆã‚’ã‚¯ãƒªãƒƒã‚¯ã—ã¦ãã ã•ã„ï¼");
     }
 
-    private void FlipOneFacedownCard()
-    {
-        var facedown = fieldZone.GetComponentsInChildren<CardView>().FirstOrDefault(c => !c.isFaceUp);
-        if (facedown != null) facedown.SetFaceUp(true);
-    }
 
-    private void SacrificeRandomFieldCharacter()
-    {
-        if (fieldZone.childCount > 0)
-        {
-            Transform target = fieldZone.GetChild(0);
-            Destroy(target.gameObject);
-        }
-    }
+
     private void ReturnCharacterToHand()
     {
         if (fieldZone.childCount == 0) return;
 
-        Transform target = fieldZone.GetChild(0); // ‰¼‚ÅÅ‰‚ÌƒJ[ƒh
+        Transform target = fieldZone.GetChild(0); // ä»®ã§æœ€åˆã®ã‚«ãƒ¼ãƒ‰
         CardView cardView = target.GetComponent<CardView>();
 
         if (cardView != null)
         {
-            handManager.AddToHand(cardView.GetCardData()); // èD‚É–ß‚·
-            Destroy(target.gameObject); // ƒtƒB[ƒ‹ƒh‚©‚çíœ
+            handManager.AddToHand(cardView.GetCardData()); // æ‰‹æœ­ã«æˆ»ã™
+            Destroy(target.gameObject); // ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‹ã‚‰å‰Šé™¤
         }
     }
 
@@ -114,37 +72,12 @@ public class CardPlayManager : MonoBehaviour
     {
         GameObject cardGO = Instantiate(cardPrefab, fieldZone);
         CardView view = cardGO.GetComponent<CardView>();
-        view.SetCard(data, true); // •\Œü‚«‚Å•\¦
-        view.isNewlySummoned = true;//‚±‚±‚Å‚±‚Ìƒ^[ƒ“¢Š«‚µ‚½‚©‚Ìbool‚ğ•ÏX
+        view.SetCard(data, true); // è¡¨å‘ãã§è¡¨ç¤º
+        view.isNewlySummoned = true;//ã“ã“ã§ã“ã®ã‚¿ãƒ¼ãƒ³å¬å–šã—ãŸã‹ã®boolã‚’å¤‰æ›´
     }
 
-    //EXˆ—i–¢À‘•j
-    public void OnClickEX()
-    {
-        if (!ActionLimiter.Instance.CanEX())
-        {
-            Debug.Log("EX‰»‚Í‚±‚Ìƒ^[ƒ“‚·‚Å‚Ég—pÏ‚İ‚Å‚·I");
-            return;
-        }
 
-        // EX‰»ˆ—‚ğ‚±‚±‚É‘‚­
-
-        ActionLimiter.Instance.UseEX();
-    }
-    //ƒŒƒxƒ‹ƒAƒbƒvˆ—i–¢À‘•j
-    public void OnClickLevelUp()
-    {
-        if (!ActionLimiter.Instance.CanLevelUp())
-        {
-            Debug.Log("ƒŒƒxƒ‹ƒAƒbƒv‚Í‚±‚Ìƒ^[ƒ“‚·‚Å‚Ég—pÏ‚İ‚Å‚·I");
-            return;
-        }
-
-        // ƒŒƒxƒ‹ƒAƒbƒvˆ—‚ğ‚±‚±‚É‘‚­
-
-        ActionLimiter.Instance.UseLevelUp();
-    }
-    //“¯–¼ƒ†ƒjƒbƒg‚ÉŠÖ‚·‚éˆ—
+    //åŒåãƒ¦ãƒ‹ãƒƒãƒˆã«é–¢ã™ã‚‹å‡¦ç†
     public bool IsSameNameCardOnField(CardData card)
     {
         foreach (Transform child in fieldZone)
@@ -152,11 +85,11 @@ public class CardPlayManager : MonoBehaviour
             CardView view = child.GetComponent<CardView>();
             if (view != null && view.cardData != null)
             {
-                // •”•ªˆê’viA ‚â B ‚ğŠÜ‚Ş–¼‘O‚©‚Ç‚¤‚©j
+                // éƒ¨åˆ†ä¸€è‡´ï¼ˆA ã‚„ B ã‚’å«ã‚€åå‰ã‹ã©ã†ã‹ï¼‰
                 if (view.cardData.cardName.Contains(card.cardName) ||
                     card.cardName.Contains(view.cardData.cardName))
                 {
-                    Debug.LogWarning($" “¯–¼ƒJ[ƒh‚ª‚·‚Å‚Éê‚É‘¶İ‚µ‚Ü‚·F{view.cardData.cardName}");
+                    Debug.LogWarning($" åŒåã‚«ãƒ¼ãƒ‰ãŒã™ã§ã«å ´ã«å­˜åœ¨ã—ã¾ã™ï¼š{view.cardData.cardName}");
                     return true;
                 }
             }

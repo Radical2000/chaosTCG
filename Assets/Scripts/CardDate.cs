@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using static Unity.VisualScripting.Dependencies.Sqlite.SQLite3;
 
 public enum CardType { Character, Event, Set }
 
@@ -11,13 +13,18 @@ public class CardData : ScriptableObject
     [TextArea] public string description;
 
     // キャラ用
-    public CardCostType costType;
+    public CostType costType;
     public int costAmount; // 手札を捨てる枚数などに使う（不要なら0）
     public int power;
     public int support;
     public bool isPartner;
     public bool hasPenetrate; // 貫通持ちかどうか
     public CardData exTarget; // EX先
+    public Sprite illustration;
+
+    //  コスト情報
+    public List<CostType> summonCostTypes = new List<CostType>();
+    public List<int> summonCostAmounts = new List<int>();
 
     // レベルアップ管理用
     public int currentLevel = 1; // 最初はLv1スタート
@@ -37,7 +44,7 @@ public class CardData : ScriptableObject
     public string exBaseA;           // EX化条件となるベースカードAの名前（例："A"）
     public string exBaseB;           // EX化条件となる素材カードBの名前（例："B"）
 
-
+    public List<CostRequirement> summonCosts = new List<CostRequirement>();
 
     public enum EXType
     {
@@ -45,4 +52,17 @@ public class CardData : ScriptableObject
         AB型,
         C型
     }
+
+
+    //  実行用オブジェクト生成
+    public List<CostRequirement> GetSummonCostRequirements()
+    {
+        var list = new List<CostRequirement>();
+        for (int i = 0; i < summonCostTypes.Count; i++)
+        {
+            list.Add(CostManager.CostFactory.Create(summonCostTypes[i], summonCostAmounts[i]));
+        }
+        return list;
+    }
+
 }

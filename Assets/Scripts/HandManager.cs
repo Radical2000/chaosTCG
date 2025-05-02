@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class HandManager : MonoBehaviour
@@ -14,17 +15,17 @@ public class HandManager : MonoBehaviour
     }
 
 
-    public Transform handZone; // èD‚ğ•À‚×‚éêŠ
+    public Transform handZone; // æ‰‹æœ­ã‚’ä¸¦ã¹ã‚‹å ´æ‰€
     public GameObject unitCardPrefab;
     public GameObject eventCardPrefab;
 
-    public CardData[] cardPool; // ƒfƒbƒL or ƒJ[ƒhˆê——‚©‚çˆø‚­
+    public CardData[] cardPool; // ãƒ‡ãƒƒã‚­ or ã‚«ãƒ¼ãƒ‰ä¸€è¦§ã‹ã‚‰å¼•ã
 
     public int startHandCount = 5;
 
-    private List<CardData> handCards = new List<CardData>(); // © ’Ç‰ÁI
+    private List<CardData> handCards = new List<CardData>(); // â† è¿½åŠ ï¼
 
-    public int HandCount => handCards.Count; // © ’Ç‰ÁI
+    public int HandCount => handCards.Count; // â† è¿½åŠ ï¼
 
     private void Start()
     {
@@ -51,23 +52,63 @@ public class HandManager : MonoBehaviour
     }
 
     /// <summary>
-    /// w’è–‡”èD‚©‚çÌ‚Ä‚éiæ“ª‚©‚çj
+    /// æŒ‡å®šæšæ•°æ‰‹æœ­ã‹ã‚‰æ¨ã¦ã‚‹ï¼ˆå…ˆé ­ã‹ã‚‰ï¼‰
     /// </summary>
-    public void DiscardFromHand(int amount)
+    public void DiscardUnitFromHand(int x)
     {
-        for (int i = 0; i < amount && handCards.Count > 0; i++)
+        List<CardView> unitCards = new List<CardView>();
+
+        foreach (Transform child in handZone)
         {
-            handCards.RemoveAt(0);
+            if (child == null) continue;
 
-            // UI‘¤‚àíœ
-            if (handZone.childCount > 0)
+            var view = child.GetComponent<CardView>();
+            if (view != null && view.cardData != null && view.cardData.isUnit)
             {
-                Destroy(handZone.GetChild(0).gameObject);
+                unitCards.Add(view);
             }
+        }
 
-            // •K—v‚È‚çÌ‚ÄDƒGƒŠƒAiT‚¦ºj‚É‘—‚éˆ—‚à‚±‚±‚Å’Ç‰Á
+        if (unitCards.Count < x)
+        {
+            Debug.LogWarning("æ‰‹æœ­ã«ãƒ¦ãƒ‹ãƒƒãƒˆã‚«ãƒ¼ãƒ‰ãŒè¶³ã‚Šã¾ã›ã‚“ï¼");
+            return;
+        }
+
+        for (int i = 0; i < x; i++)
+        {
+            int index = Random.Range(0, unitCards.Count);
+            var toDiscard = unitCards[index];
+            unitCards.RemoveAt(index);
+
+            DiscardManager.Instance.AddToDiscard(toDiscard.cardData);
+            Destroy(toDiscard.gameObject);
+
+            Debug.Log($" ãƒ¦ãƒ‹ãƒƒãƒˆ {toDiscard.cardData.cardName} ã‚’æ‰‹æœ­ã‹ã‚‰æ¨ã¦ã¾ã—ãŸ");
         }
     }
+
+
+    public int CountUnitCardsInHand()
+    {
+        if (handZone == null)
+        {
+            Debug.LogWarning(" handZone ãŒè¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“ï¼");
+            return 0;
+        }
+
+        int count = 0;
+        foreach (Transform child in handZone)
+        {
+            var view = child.GetComponent<CardView>();
+            if (view != null && view.cardData != null && view.cardData.isUnit)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public void AddToHand(CardData data)
     {
         GameObject prefabToUse = data.isUnit ? unitCardPrefab : eventCardPrefab;
@@ -76,7 +117,6 @@ public class HandManager : MonoBehaviour
         CardView view = cardGO.GetComponent<CardView>();
         view.SetCard(data, true);
 
-        handCards.Add(data);
     }
     public void DrawCard(int count)
     {
@@ -89,7 +129,7 @@ public class HandManager : MonoBehaviour
             SpawnCardToHand(drawnCard);
         }
     }
-    //EXˆ—‚ÌƒTƒ|[ƒgŠÖ”
+    //EXå‡¦ç†ã®ã‚µãƒãƒ¼ãƒˆé–¢æ•°
     public bool HasCardWithName(string name)
     {
         foreach (Transform child in handZone)
@@ -115,9 +155,9 @@ public class HandManager : MonoBehaviour
             if (view != null && view.cardData != null &&
                 view.cardData.cardName.Contains(name))
             {
-                //  æ‚É•Û‚µ‚Ä‚©‚çíœ
+                //  å…ˆã«ä¿æŒã—ã¦ã‹ã‚‰å‰Šé™¤
                 CardView result = view;
-                result.transform.SetParent(null); // ”O‚Ì‚½‚ßˆê“xŠO‚·
+                result.transform.SetParent(null); // å¿µã®ãŸã‚ä¸€åº¦å¤–ã™
                 Destroy(view.gameObject);
                 return result;
             }
@@ -125,19 +165,19 @@ public class HandManager : MonoBehaviour
         return null;
     }
 
-    // èD‚©‚çw’è‚µ‚½CardView‚ğíœ‚·‚é
+    // æ‰‹æœ­ã‹ã‚‰æŒ‡å®šã—ãŸCardViewã‚’å‰Šé™¤ã™ã‚‹
     public bool RemoveCard(CardView cardView)
     {
         if (cardView == null)
         {
-            Debug.LogWarning(" RemoveCard‚Énull‚ª“n‚³‚ê‚Ü‚µ‚½");
+            Debug.LogWarning(" RemoveCardã«nullãŒæ¸¡ã•ã‚Œã¾ã—ãŸ");
             return false;
         }
 
-        // e‚ªhandZone‚©ƒ`ƒFƒbƒNièD‚É‚ ‚é‚©j
+        // è¦ªãŒhandZoneã‹ãƒã‚§ãƒƒã‚¯ï¼ˆæ‰‹æœ­ã«ã‚ã‚‹ã‹ï¼‰
         if (cardView.transform.parent != handZone)
         {
-            Debug.LogWarning(" ‚±‚ÌƒJ[ƒh‚ÍèD‚É‚ ‚è‚Ü‚¹‚ñI");
+            Debug.LogWarning(" ã“ã®ã‚«ãƒ¼ãƒ‰ã¯æ‰‹æœ­ã«ã‚ã‚Šã¾ã›ã‚“ï¼");
             return false;
         }
 
