@@ -4,9 +4,19 @@ using UnityEngine;
 
 public class CardPlayManager : MonoBehaviour
 {
+    public static CardPlayManager Instance;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
     public Transform fieldZone;
     public HandManager handManager;
     public GameObject cardPrefab;
+    public CardView deferredCardView;
+
 
     public void PlayCard(CardView cardView)
     {
@@ -30,24 +40,46 @@ public class CardPlayManager : MonoBehaviour
             return;
         }
 
-        // ✅ コスト判定・支払い（新方式）
         var costList = card.GetSummonCostRequirements();
+
+        // 即時支払可能なコストをチェック（選択式は後回し）
         foreach (var cost in costList)
         {
+            if (cost.type == CostType.DiscardX || cost.type == CostType.DiscardXUnit)
+            {
+                continue; // 後で処理
+            }
+
             if (!cost.isPayable())
             {
                 Debug.LogWarning($"コスト {cost.type} を支払えません！");
                 return;
             }
         }
+
+        // 選択を必要とするコストがある場合は、UIに移行
+        bool hasDeferredCost = costList.Any(c => c.type == CostType.DiscardX || c.type == CostType.DiscardXUnit);
+
+        if (hasDeferredCost)
+        {
+            foreach (var cost in costList)
+            {
+                if (cost.type == CostType.DiscardX || cost.type == CostType.DiscardXUnit)
+                {
+                    deferredCardView = cardView;
+                    cost.doPay(); // UIを開く → onComplete で OnCostPaymentComplete 呼ぶ
+                    return;
+                }
+            }
+        }
+
+        // 全コストを支払う
         foreach (var cost in costList)
         {
             cost.doPay();
         }
 
-        ActionLimiter.Instance.UseSummon(); // 制限カウント
-
-        // ★ スロットに配置するのは OnClickSlot 側でやる！
+        ActionLimiter.Instance.UseSummon();
         FieldManager.Instance.selectedCardToSummon = cardView;
         Debug.Log("PlayCard 完了 → スロットをクリックしてください！");
     }
@@ -96,5 +128,34 @@ public class CardPlayManager : MonoBehaviour
         }
         return false;
     }
+    public void ResolveSummonAfterCost()
+    {
+        if (selectedCardToSummon == null)
+        {
+            Debug.LogWarning(" 召喚対象のカードが未設定です");
+            return;
+        }
 
+        Debug.Log(" コスト支払い完了 → スロットをクリックしてください");
+        // ここではスロットクリック待ち状態に戻すだけでOK
+    }
+    public void OnCostPaymentComplete()
+    {
+        Debug.Log(" コスト支払い完了 → 召喚再開");
+
+        if (deferredCardView != null)
+        {
+            ActionLimiter.Instance.UseSummon();
+            FieldManager.Instance.selectedCardToSummon = deferredCardView;
+            Debug.Log("PlayCard 完了（コストあり）→ スロットをクリックしてください！");
+            deferredCardView = null;
+        }
+        else
+        {
+            Debug.LogWarning(" OnCostPaymentComplete: deferredCardView が null");
+        }
+    }
+
+    public CardView selectedCardToSummon;
 }
+

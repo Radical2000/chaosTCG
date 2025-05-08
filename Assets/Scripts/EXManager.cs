@@ -268,6 +268,7 @@ public class EXManager : MonoBehaviour
             if (selectedEXCard.exType == EXType.AB型)
             {
                 HighlightMaterialCards(selectedEXCard);
+                materialMode = MaterialUseMode.EX; // ★ これが絶対に必要！
                 UpdateInstruction("素材カードを選んでください");
             }
             else if (selectedEXCard.exType == EXType.C型)

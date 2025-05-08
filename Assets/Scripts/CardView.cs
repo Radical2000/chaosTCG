@@ -24,6 +24,8 @@ public class CardView : MonoBehaviour
 
     public GameObject highlightFrame;
     private bool isHighlighted;
+    public bool isBeingCostProcessed = false;
+
 
     [Header("UI参照")]
     public Image cardImage;
@@ -34,13 +36,16 @@ public class CardView : MonoBehaviour
     public GameObject backside;
     public TextMeshProUGUI descriptionText;
     public TextMeshProUGUI levelText;
-
+    public bool isPartner = false;
+    public bool IsPartner => isPartner;
 
     public CardData cardData;
     //EXステータス
     public int currentLevel = 1;
     public int accumulatedAtkBoost = 0;
     public int accumulatedHpBoost = 0;
+
+    private bool isSelectable = false;
 
     private void Start()
     {
@@ -163,9 +168,8 @@ public class CardView : MonoBehaviour
     {
         Debug.Log($"🧪 cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
         Debug.Log($"🟡 OnClickActionButton 実行！clickMode = {clickMode}");
-        Debug.Log($"[DEBUG] 親の名前: {transform.parent.name}");
+        Debug.Log($"🟡 isSelectable = {isSelectable}, HandSelectionUI.Instance?.IsSelecting = {(HandSelectionUI.Instance != null ? HandSelectionUI.Instance.IsSelecting.ToString() : "null")}");
 
-        // EXレベルアップ用素材カードの選択
         // EXレベルアップ用素材カードの選択
         if (transform.parent.name == "PlayerHand")
         {
@@ -189,6 +193,29 @@ public class CardView : MonoBehaviour
                 }
             }
         }
+
+        if (FieldSelectionUI.Instance != null && FieldSelectionUI.Instance.IsSelecting)
+        {
+            Debug.Log("🟢 フィールド選択モードでクリック検出 → FieldSelectionUI に通知");
+            FieldSelectionUI.Instance.OnCardClickedFromField(this);
+            return;
+        }
+
+        //  手札選択モードが有効なら優先で処理を渡す
+        if (isSelectable && HandSelectionUI.Instance != null && HandSelectionUI.Instance.IsSelecting)
+        {
+            Debug.Log("🟢 手札選択モードでカードをクリック → OnCardClickedFromHand に進む");
+            HandSelectionUI.Instance.OnCardClickedFromHand(this);
+            return;
+        }
+        else
+        {
+            if (!isSelectable) Debug.Log("🟠 isSelectable が false のため選択できません");
+            if (HandSelectionUI.Instance == null) Debug.Log("🛑 HandSelectionUI.Instance が null");
+            else if (!HandSelectionUI.Instance.IsSelecting) Debug.Log("🟠 HandSelectionUI は選択モードではありません");
+        }
+
+        
 
         // EXカード（EXUnitPanel）の選択処理
         if (transform.parent.name == "EXUnitPanel")
@@ -344,7 +371,7 @@ public class CardView : MonoBehaviour
     // レベルアップ権を持っているかどうか（EX or パートナー）
     public bool CanLevelUp()
     {
-        return cardData.isEX || cardData.isPartner;
+        return cardData.isEX || isPartner;
     }
 
     // レベルアップ実行処理
@@ -381,6 +408,37 @@ public class CardView : MonoBehaviour
         if (levelText != null)
             levelText.text = $"Lv{currentLevel}";
     }
+    public void SetSelected(bool isSelected)
+    {
+        // 例：カードに色をつけるなどの見た目変更
+        var image = GetComponent<UnityEngine.UI.Image>();
+        if (image != null)
+            image.color = isSelected ? Color.yellow : Color.white;
+    }
 
+    public void SetSelectable(bool value)
+    {
+        isSelectable = value;
 
+        if (cardData != null)
+            Debug.Log($"SetSelectable({value}) → {cardData.cardName}");
+        else
+            Debug.LogWarning($"SetSelectable({value}) → cardData が null");
+
+        var image = GetComponent<UnityEngine.UI.Image>();
+        if (image != null)
+        {
+            image.color = value ? new Color(1f, 1f, 0.8f) : Color.white;
+        }
+    }
+
+    public bool IsEXUnit()
+    {
+        return cardData != null && cardData.isEX;
+    }
+    public void DestroyFromField()
+    {
+        // Slot情報を消す処理も必要ならここで
+        Destroy(gameObject);
+    }
 }

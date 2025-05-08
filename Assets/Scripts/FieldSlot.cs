@@ -31,8 +31,12 @@ public class FieldSlot : MonoBehaviour
             // 既存のユニットを破棄（控え室へ）
             DiscardManager.Instance.MoveCardViewToDiscard(currentCard);
         }
-
         currentCard = card;
+        if (isPartnerSlot)
+        {
+            card.isPartner = true;
+        }
+        
         card.transform.SetParent(cardAnchor);
         card.transform.localPosition = Vector3.zero;
         card.transform.localScale = Vector3.one;
@@ -41,6 +45,7 @@ public class FieldSlot : MonoBehaviour
     }
     public void OnClickSlot()
     {
+        // ① EXレベルアップ処理
         if (EXManager.Instance != null && EXManager.Instance.IsWaitingForLevelUpTarget())
         {
             CardView selectedMaterial = EXManager.Instance.GetSelectedLevelUpMaterial();
@@ -50,44 +55,65 @@ public class FieldSlot : MonoBehaviour
                 return;
             }
         }
+
+        // ② EX召喚処理
         if (EXManager.Instance != null && EXManager.Instance.HasSelectedEXCard())
         {
             EXManager.Instance.OnClickSlotForEX(this);
             return;
         }
-        CardView card = FieldManager.Instance.selectedCardToSummon;
-        if (card == null) return;
 
-        if (isPartnerSlot)
+        // ③ 通常召喚処理（ReturnOneToHand 対応込み）
+        CardView card = FieldManager.Instance.selectedCardToSummon;
+        if (card == null)
         {
-            Debug.Log(" パートナースロットには配置できません");
+            Debug.Log("召喚対象がないため処理を中断します");
             return;
         }
 
-        // すでにカードがいたら墓地へ送る
-        if (currentCard != null)
+        // パートナーを破棄しない
+        if (currentCard != null && currentCard.IsPartner)
         {
-            Debug.Log($" スロット{slotIndex}にいた {currentCard.cardData.cardName} を破棄します");
-
-            // 装備やエフェクトもあればここで一括処理する
-            DiscardManager.Instance.AddToDiscard(currentCard.cardData);
-            Destroy(currentCard.gameObject);
+            Debug.Log("このスロットはパートナーのため破棄できません");
+            return;
         }
 
-        // 手札から移動（召喚）
+        // 既存カードがいる場合の処理（破棄 or 特殊処理）
+        if (currentCard != null)
+        {
+            if (card.isBeingCostProcessed)
+            {
+                Debug.Log("この処理はReturnOneToHand中のため、スロットのカードは破棄しません");
+                Destroy(currentCard.gameObject); // あくまで見た目だけ除去
+
+                FieldManager.Instance.selectedCardToSummon = null; 
+                return; 
+            }
+            else
+            {
+                if (currentCard.IsEXUnit())
+                {
+                    DiscardManager.Instance.BanishCardData(currentCard.cardData);
+                }
+                else
+                {
+                    DiscardManager.Instance.AddToDiscard(currentCard.cardData);
+                }
+                Destroy(currentCard.gameObject);
+            }
+        }
+
+        // 新しいカードをセット
         card.transform.SetParent(cardAnchor);
         card.transform.localPosition = Vector3.zero;
-
-        // 登場フラグ
         card.isNewlySummoned = true;
-
         currentCard = card;
+
         FieldManager.Instance.selectedCardToSummon = null;
 
         Debug.Log($"スロット {slotIndex} に {card.cardData.cardName} を配置しました");
-
-
     }
+
     //slotのハイライト
     public void SetHighlight(bool enable)
     {

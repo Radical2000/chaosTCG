@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class FieldManager : MonoBehaviour
 {
@@ -105,12 +106,12 @@ public class FieldManager : MonoBehaviour
     public void SelectSlot(FieldSlot slot)
     {
         selectedSlot = slot;
-        Debug.Log($"🟢 スロットを選択：{slot.name}");
+        Debug.Log($" スロットを選択：{slot.name}");
     }
 
     //デバッグ用
 
-    private void Start()
+    private IEnumerator Start()
     {
         // 敵フィールド側のスロットの初期化
         foreach (Transform child in enemyFieldZone)
@@ -118,14 +119,78 @@ public class FieldManager : MonoBehaviour
             FieldSlot slot = child.GetComponent<FieldSlot>();
             if (slot != null)
             {
-                // CardAnchor 内の CardView を探す
                 CardView card = slot.GetComponentInChildren<CardView>();
                 if (card != null)
                 {
                     slot.currentCard = card;
-                    Debug.Log($"🟢 Slot {slot.name} に {card.cardData.cardName} を初期登録しました");
+                    Debug.Log($"Slot {slot.name} に {card.cardData.cardName} を初期登録しました");
+                }
+            }
+        }
+
+        yield return null; // 次のフレームまで待つ（カードが配置された後になる）
+
+        foreach (Transform child in playerFieldZone)
+        {
+            FieldSlot slot = child.GetComponent<FieldSlot>();
+            if (slot != null)
+            {
+                Debug.Log($"[DEBUG] スロット: {slot.name}, cardAnchorの子数: {slot.cardAnchor.childCount}");
+
+                CardView card = slot.cardAnchor.GetComponentInChildren<CardView>();
+                if (card != null)
+                {
+                    slot.currentCard = card;
+                    Debug.Log("Card found");
+
+                    if (slot.isPartnerSlot)
+                    {
+                        card.isPartner = true;
+                        Debug.Log($"isPartner = true → {card.cardData.cardName}");
+                    }
+                    else
+                    {
+                        Debug.Log($"isPartner = false → {card.cardData.cardName}");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"cardAnchor に CardView が見つかりません（{slot.name}）");
                 }
             }
         }
     }
+    
+
+
+    public bool HasReturnableUnit()
+    {
+        foreach (Transform child in playerFieldZone)
+        {
+            var slot = child.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard != null && !slot.currentCard.isPartner)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    public void RemoveFromField(CardView view)
+    {
+        if (view == null) return;
+
+        // スロットから取り除く
+        foreach (Transform child in playerFieldZone)
+        {
+            FieldSlot slot = child.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard == view)
+            {
+                slot.currentCard = null;
+                break;
+            }
+        }
+
+        view.transform.SetParent(null); // 親から切り離す（削除はしない）
+    }
+
 }

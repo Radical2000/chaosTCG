@@ -17,7 +17,6 @@ public class CardData : ScriptableObject
     public int costAmount; // 手札を捨てる枚数などに使う（不要なら0）
     public int power;
     public int support;
-    public bool isPartner;
     public bool hasPenetrate; // 貫通持ちかどうか
     public CardData exTarget; // EX先
     public Sprite illustration;
