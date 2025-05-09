@@ -179,18 +179,18 @@ public class FieldManager : MonoBehaviour
     {
         if (view == null) return;
 
-        // スロットから取り除く
         foreach (Transform child in playerFieldZone)
         {
             FieldSlot slot = child.GetComponent<FieldSlot>();
             if (slot != null && slot.currentCard == view)
             {
-                slot.currentCard = null;
+                slot.currentCard = null; 
                 break;
             }
         }
 
-        view.transform.SetParent(null); // 親から切り離す（削除はしない）
+        view.transform.SetParent(null); // 親から切り離す、削除はなし
     }
+
 
 }

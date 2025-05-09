@@ -81,13 +81,13 @@ public class FieldSlot : MonoBehaviour
         // 既存カードがいる場合の処理（破棄 or 特殊処理）
         if (currentCard != null)
         {
-            if (card.isBeingCostProcessed)
+            if (currentCard.isBeingReturnedToHand)
             {
                 Debug.Log("この処理はReturnOneToHand中のため、スロットのカードは破棄しません");
                 Destroy(currentCard.gameObject); // あくまで見た目だけ除去
 
-                FieldManager.Instance.selectedCardToSummon = null; 
-                return; 
+                FieldManager.Instance.selectedCardToSummon = null;
+                return;
             }
             else
             {
@@ -102,6 +102,7 @@ public class FieldSlot : MonoBehaviour
                 Destroy(currentCard.gameObject);
             }
         }
+
 
         // 新しいカードをセット
         card.transform.SetParent(cardAnchor);

@@ -119,14 +119,27 @@ public class CostManager : MonoBehaviour
                         {
                             FieldSelectionUI.Instance.StartSelection(
                                 1,
+                                // フィルタ（boolを返す）
                                 cardView =>
                                 {
-                                    if (cardView == null || cardView.cardData == null)
+                                    if (cardView == null || cardView.cardData == null) return false;
+                                    if (cardView.IsPartner) return false;
+
+                                    // フィールド上に存在するスロットのcurrentCardと一致しているか
+                                    foreach (Transform t in FieldManager.Instance.playerFieldZone)
                                     {
-                                        Debug.LogWarning("ReturnOneToHand: cardViewまたはcardDataがnullです");
-                                        return;
+                                        FieldSlot slot = t.GetComponent<FieldSlot>();
+                                        if (slot != null && slot.currentCard == cardView)
+                                        {
+                                            return true;
+                                        }
                                     }
 
+                                    return false;
+                                },
+                                // 選択結果の処理（void）
+                                cardView =>
+                                {
                                     if (cardView.IsEXUnit())
                                     {
                                         DiscardManager.Instance.BanishCardData(cardView.cardData);
@@ -135,9 +148,10 @@ public class CostManager : MonoBehaviour
                                     }
                                     else
                                     {
+                                        cardView.isBeingReturnedToHand = true;
                                         FieldManager.Instance.RemoveFromField(cardView);
-                                        HandManager.Instance.AddToHand(cardView.cardData); //  生成付き追加
-                                        GameObject.Destroy(cardView.gameObject); //  元カードを破棄
+                                        HandManager.Instance.AddToHand(cardView.cardData);
+                                        GameObject.Destroy(cardView.gameObject);
                                         Debug.Log($"通常ユニットを手札に戻した: {cardView.cardData.cardName}");
                                     }
                                 },
@@ -145,6 +159,9 @@ public class CostManager : MonoBehaviour
                             );
                         }
                     );
+
+
+
 
             }
         }

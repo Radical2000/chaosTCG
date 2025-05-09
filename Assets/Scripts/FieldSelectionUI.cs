@@ -11,6 +11,7 @@ public class FieldSelectionUI : MonoBehaviour
     private List<CardView> selectedCards = new List<CardView>();
     private Action<CardView> onSelect;
     private Action onComplete;
+    private Func<CardView, bool> filter;
 
     private void Awake()
     {
@@ -20,28 +21,34 @@ public class FieldSelectionUI : MonoBehaviour
 
     public bool IsSelecting => isSelecting;
 
-    public void StartSelection(int count, Action<CardView> onSelect, Action onComplete)
+    public void StartSelection(int count, Func<CardView, bool> filter, Action<CardView> onSelect, Action onComplete)
     {
         isSelecting = true;
         requiredCount = count;
         selectedCards.Clear();
+        this.filter = filter;
         this.onSelect = onSelect;
         this.onComplete = onComplete;
 
         foreach (Transform slotTransform in FieldManager.Instance.playerFieldZone)
         {
             var slot = slotTransform.GetComponent<FieldSlot>();
-            if (slot != null && slot.currentCard != null && !slot.currentCard.isPartner)
+            if (slot != null && slot.currentCard != null && filter(slot.currentCard)) // ✅ filter を適用
             {
                 slot.currentCard.SetSelectable(true);
             }
         }
 
-        Debug.Log($" フィールド選択開始: {count}体");
+        Debug.Log($" フィールド選択開始（フィルタあり）: {count}体");
     }
 
     public void OnCardClickedFromField(CardView card)
     {
+        if (!isSelecting || !filter(card)) // ← filter チェックを追加
+        {
+            Debug.LogWarning(" 不正なカードがクリックされた、または選択モードでない");
+            return;
+        }
         Debug.Log($" OnCardClickedFromField 呼ばれた → {card.cardData.cardName}");
 
         if (!isSelecting)

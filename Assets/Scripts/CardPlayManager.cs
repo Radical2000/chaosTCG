@@ -16,7 +16,7 @@ public class CardPlayManager : MonoBehaviour
     public HandManager handManager;
     public GameObject cardPrefab;
     public CardView deferredCardView;
-
+    public CardView selectedCardToSummon;
 
     public void PlayCard(CardView cardView)
     {
@@ -42,38 +42,30 @@ public class CardPlayManager : MonoBehaviour
 
         var costList = card.GetSummonCostRequirements();
 
-        // 即時支払可能なコストをチェック（選択式は後回し）
+        // ✅ すべてのコストが支払可能かチェック（選択式も含めて！）
         foreach (var cost in costList)
         {
-            if (cost.type == CostType.DiscardX || cost.type == CostType.DiscardXUnit)
-            {
-                continue; // 後で処理
-            }
-
             if (!cost.isPayable())
             {
-                Debug.LogWarning($"コスト {cost.type} を支払えません！");
+                Debug.LogWarning($"コスト {cost.type} を支払えないため、召喚を中止します");
                 return;
             }
         }
 
-        // 選択を必要とするコストがある場合は、UIに移行
-        bool hasDeferredCost = costList.Any(c => c.type == CostType.DiscardX || c.type == CostType.DiscardXUnit);
+        // ✅ 選択を必要とするコストがある場合 → defer
+        var deferredCost = costList.FirstOrDefault(c =>
+            c.type == CostType.DiscardX ||
+            c.type == CostType.DiscardXUnit ||
+            c.type == CostType.ReturnOneToHand);
 
-        if (hasDeferredCost)
+        if (deferredCost != null)
         {
-            foreach (var cost in costList)
-            {
-                if (cost.type == CostType.DiscardX || cost.type == CostType.DiscardXUnit)
-                {
-                    deferredCardView = cardView;
-                    cost.doPay(); // UIを開く → onComplete で OnCostPaymentComplete 呼ぶ
-                    return;
-                }
-            }
+            deferredCardView = cardView;
+            deferredCost.doPay(); // UI起動 → 完了後 OnCostPaymentComplete 呼ばれる
+            return;
         }
 
-        // 全コストを支払う
+        // ✅ すべて即時支払い可能 → 即支払い
         foreach (var cost in costList)
         {
             cost.doPay();
@@ -85,7 +77,6 @@ public class CardPlayManager : MonoBehaviour
     }
 
 
-
     private void ReturnCharacterToHand()
     {
         if (fieldZone.childCount == 0) return;
@@ -95,8 +86,8 @@ public class CardPlayManager : MonoBehaviour
 
         if (cardView != null)
         {
-            handManager.AddToHand(cardView.GetCardData()); // 手札に戻す
-            Destroy(target.gameObject); // フィールドから削除
+            handManager.AddToHand(cardView.GetCardData());
+            Destroy(target.gameObject);
         }
     }
 
@@ -104,12 +95,10 @@ public class CardPlayManager : MonoBehaviour
     {
         GameObject cardGO = Instantiate(cardPrefab, fieldZone);
         CardView view = cardGO.GetComponent<CardView>();
-        view.SetCard(data, true); // 表向きで表示
-        view.isNewlySummoned = true;//ここでこのターン召喚したかのboolを変更
+        view.SetCard(data, true);
+        view.isNewlySummoned = true;
     }
 
-
-    //同名ユニットに関する処理
     public bool IsSameNameCardOnField(CardData card)
     {
         foreach (Transform child in fieldZone)
@@ -117,9 +106,7 @@ public class CardPlayManager : MonoBehaviour
             CardView view = child.GetComponent<CardView>();
             if (view != null && view.cardData != null)
             {
-                // 部分一致（A や B を含む名前かどうか）
-                if (view.cardData.cardName.Contains(card.cardName) ||
-                    card.cardName.Contains(view.cardData.cardName))
+                if (view.cardData.cardName.Contains(card.cardName) || card.cardName.Contains(view.cardData.cardName))
                 {
                     Debug.LogWarning($" 同名カードがすでに場に存在します：{view.cardData.cardName}");
                     return true;
@@ -128,6 +115,7 @@ public class CardPlayManager : MonoBehaviour
         }
         return false;
     }
+
     public void ResolveSummonAfterCost()
     {
         if (selectedCardToSummon == null)
@@ -137,8 +125,8 @@ public class CardPlayManager : MonoBehaviour
         }
 
         Debug.Log(" コスト支払い完了 → スロットをクリックしてください");
-        // ここではスロットクリック待ち状態に戻すだけでOK
     }
+
     public void OnCostPaymentComplete()
     {
         Debug.Log(" コスト支払い完了 → 召喚再開");
@@ -155,7 +143,4 @@ public class CardPlayManager : MonoBehaviour
             Debug.LogWarning(" OnCostPaymentComplete: deferredCardView が null");
         }
     }
-
-    public CardView selectedCardToSummon;
 }
-

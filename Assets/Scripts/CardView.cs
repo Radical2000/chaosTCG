@@ -25,6 +25,7 @@ public class CardView : MonoBehaviour
     public GameObject highlightFrame;
     private bool isHighlighted;
     public bool isBeingCostProcessed = false;
+    public bool isBeingReturnedToHand = false;
 
 
     [Header("UI参照")]
