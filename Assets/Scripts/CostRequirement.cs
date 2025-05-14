@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using static CardData;
 
@@ -8,10 +6,10 @@ public class CostRequirement
 {
     public CostType type;
     public int amount; // Xw’èŒn‚Ì‚½‚ß
-    public Func<bool> isPayable; // x•¥‚¦‚é‚©H
-    public Action doPay;         // x•¥‚¢Às
+    public Func<CardView, bool> isPayable; // ‘ÎÛƒJ[ƒh‚ğ“n‚·
+    public Action doPay;
 
-    public CostRequirement(CostType type, int amount, Func<bool> isPayable, Action doPay)
+    public CostRequirement(CostType type, int amount, Func<CardView, bool> isPayable, Action doPay)
     {
         this.type = type;
         this.amount = amount;

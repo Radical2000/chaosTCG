@@ -39,6 +39,8 @@ public class CardView : MonoBehaviour
     public TextMeshProUGUI levelText;
     public bool isPartner = false;
     public bool IsPartner => isPartner;
+    public bool IsRested => isRested;
+
 
     public CardData cardData;
     //EXステータス
@@ -177,7 +179,7 @@ public class CardView : MonoBehaviour
             /// EXレベルアップ用素材カードの選択
             if (transform.parent.name == "PlayerHand")
             {
-                // ✅ ① レベルアップ素材選択（最優先でチェック）
+                //  ① レベルアップ素材選択（最優先でチェック）
                 if (EXManager.Instance.IsWaitingForLevelUpMaterial())
                 {
                     Debug.Log($"🟢 レベルアップ素材として {cardData.cardName} を選択しました");
@@ -185,7 +187,7 @@ public class CardView : MonoBehaviour
                     return;
                 }
 
-                // ✅ ② EX素材選択（materialMode が EX のときだけ）
+                //  ② EX素材選択（materialMode が EX のときだけ）
                 if (EXManager.Instance.HasSelectedEXCard() && EXManager.Instance.materialMode == EXManager.MaterialUseMode.EX)
                 {
                     Debug.Log($"🟢 EX素材カードとして {cardData.cardName} を選択しました");
@@ -281,7 +283,7 @@ public class CardView : MonoBehaviour
             return;
         }
 
-        // 🟢 ユニット召喚（カードクリックによる通常召喚）
+        //  ユニット召喚（カードクリックによる通常召喚）
         if (clickMode == CardClickMode.None && cardData.isUnit)
         {
             if (transform.parent.name != "PlayerHand")

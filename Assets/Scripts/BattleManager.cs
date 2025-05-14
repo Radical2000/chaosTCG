@@ -187,7 +187,7 @@ public class BattleManager : MonoBehaviour
 
         Debug.Log("防御側：ライフで受ける選択 → ガードユニットなしとして処理継続");
 
-        currentDefender = null; // ✅ ガードユニットはなしと明示！
+        currentDefender = null; //  ガードユニットはなしと明示！
 
         defenseChoicePanel.SetActive(false);
 
@@ -360,7 +360,7 @@ public class BattleManager : MonoBehaviour
         Debug.Log($"[DEBUG] 攻撃側カード: {attacker.cardName}");
         Debug.Log($"[DEBUG] hasPenetrate={attacker.hasPenetrate}, tempPenetrate={currentAttacker.tempHasPenetrate}, effective={attackerHasPenetrate}");
 
-        // ✅ ライフで受ける場合
+        //  ライフで受ける場合
         if (!defenderExists)
         {
             Debug.Log("🩸 防御ユニットがいない → ライフで直接ダメージ");
@@ -371,7 +371,7 @@ public class BattleManager : MonoBehaviour
 
         bool defenderIsFaceUp = currentDefender.isFaceUp;
 
-        // ✅ 貫通チェックはユニット裏返す前にやる！
+        //  貫通チェックはユニット裏返す前にやる！
         if (!defenderIsFaceUp)
         {
             if (attackerHasPenetrate)
@@ -386,7 +386,7 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        // ✅ 通常戦闘処理（先にダメージ処理）
+        //  通常戦闘処理（先にダメージ処理）
         currentDefender.TakeDamage(atkPower);
         currentAttacker.TakeDamage(defPower);
 
@@ -400,15 +400,15 @@ public class BattleManager : MonoBehaviour
         }
 
 
-        // ✅ 攻撃側は攻撃宣言時に必ずレスト（戦闘後）
+        //  攻撃側は攻撃宣言時に必ずレスト（戦闘後）
         currentAttacker.SetRest(true);
-        // ✅ 攻撃ユニットが裏になった場合 → HPを0に
+        //  攻撃ユニットが裏になった場合 → HPを0に
         if (!currentAttacker.isFaceUp)
         {
             currentAttacker.currentHP = 0;
             currentAttacker.UpdateHPText(); // 表示更新
         }
-        // ✅ 防御ユニットが裏になった場合 → HPを0に
+        //  防御ユニットが裏になった場合 → HPを0に
         if (!currentDefender.isFaceUp)
         {
             currentDefender.currentHP = 0;

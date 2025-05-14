@@ -185,5 +185,18 @@ public class HandManager : MonoBehaviour
         return true;
     }
 
+    public int HandCountExcluding(CardView exclude)
+    {
+        int count = 0;
+        foreach (Transform child in handZone)
+        {
+            CardView view = child.GetComponent<CardView>();
+            if (view != null && view != exclude)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
 
 }

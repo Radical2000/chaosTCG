@@ -8,6 +8,7 @@ public enum CostType
     DiscardX,
     DiscardXUnit,
     ReturnOneToHand,
+    RestOneUnit,
     FlipUnitFaceUp,
     FlipUnitFaceDown,
     BounceUnit,

@@ -42,21 +42,22 @@ public class CardPlayManager : MonoBehaviour
 
         var costList = card.GetSummonCostRequirements();
 
-        // ✅ すべてのコストが支払可能かチェック（選択式も含めて！）
+        //  すべてのコストが支払可能かチェック（選択式も含めて！）
         foreach (var cost in costList)
         {
-            if (!cost.isPayable())
+            if (!cost.isPayable(cardView))
             {
                 Debug.LogWarning($"コスト {cost.type} を支払えないため、召喚を中止します");
                 return;
             }
         }
 
-        // ✅ 選択を必要とするコストがある場合 → defer
+        //  選択を必要とするコストがある場合 → defer
         var deferredCost = costList.FirstOrDefault(c =>
             c.type == CostType.DiscardX ||
             c.type == CostType.DiscardXUnit ||
-            c.type == CostType.ReturnOneToHand);
+            c.type == CostType.ReturnOneToHand||
+            c.type==CostType.RestOneUnit);
 
         if (deferredCost != null)
         {
@@ -65,7 +66,7 @@ public class CardPlayManager : MonoBehaviour
             return;
         }
 
-        // ✅ すべて即時支払い可能 → 即支払い
+        //  すべて即時支払い可能 → 即支払い
         foreach (var cost in costList)
         {
             cost.doPay();

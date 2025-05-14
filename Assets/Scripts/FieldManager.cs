@@ -192,5 +192,17 @@ public class FieldManager : MonoBehaviour
         view.transform.SetParent(null); // 親から切り離す、削除はなし
     }
 
+    public bool HasRestableUnit()
+    {
+        foreach (Transform child in playerFieldZone)
+        {
+            var slot = child.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard != null && !slot.currentCard.IsRested && !slot.currentCard.IsPartner)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

@@ -23,8 +23,8 @@ MonoBehaviour:
   hasPenetrate: 0
   exTarget: {fileID: 11400000, guid: 63ae1497b87fc594498ed1ae9f71f20e, type: 2}
   illustration: {fileID: 0}
-  summonCostTypes: 03000000
-  summonCostAmounts: 01000000
+  summonCostTypes: 01000000
+  summonCostAmounts: 02000000
   currentLevel: 1
   exLevelUpAtkBoost: 0
   exLevelUpHpBoost: 0

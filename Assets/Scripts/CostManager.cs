@@ -55,13 +55,13 @@ public class CostManager : MonoBehaviour
                     return new CostRequirement(
                         type,
                         amount,
-                        () => HandManager.Instance.HandCount >= amount,
+                        card => HandManager.Instance.HandCountExcluding(card) >= amount,
                         () =>
                         {
                             var targetCard = CardPlayManager.Instance.deferredCardView;
                             HandSelectionUI.Instance.StartSelection(
                                 amount,
-                                view => view != targetCard, // 出そうとしているカードを除外
+                                view => view != targetCard && view.cardData != null,
                                 views =>
                                 {
                                     foreach (var view in views)
@@ -70,16 +70,19 @@ public class CostManager : MonoBehaviour
                                         DiscardManager.Instance.AddToDiscard(view.cardData);
                                         Debug.Log($"捨てました: {view.cardData.cardName}");
                                     }
+
+                                    CardPlayManager.Instance.OnCostPaymentComplete();
                                 },
-                                CardPlayManager.Instance.OnCostPaymentComplete
+                                null
                             );
-                        });
+                        }
+                    );
 
                 case CostType.DiscardXUnit:
                     return new CostRequirement(
                         type,
                         amount,
-                        () => HandManager.Instance.CountUnitCardsInHand() >= amount,
+                        card => HandManager.Instance.CountUnitCardsInHand() >= amount + 1,
                         () =>
                         {
                             var targetCard = CardPlayManager.Instance.deferredCardView;
@@ -104,7 +107,7 @@ public class CostManager : MonoBehaviour
                     return new CostRequirement(
                         type,
                         amount,
-                        () => true,
+                        card => true,
                         () =>
                         {
                             CardPlayManager.Instance.OnCostPaymentComplete();
@@ -114,7 +117,7 @@ public class CostManager : MonoBehaviour
                     return new CostRequirement(
                         type,
                         1,
-                        () => FieldManager.Instance.HasReturnableUnit(),
+                        card => FieldManager.Instance.HasReturnableUnit(),
                         () =>
                         {
                             FieldSelectionUI.Instance.StartSelection(
@@ -160,7 +163,36 @@ public class CostManager : MonoBehaviour
                         }
                     );
 
+                case CostType.RestOneUnit:
+                    return new CostRequirement(
+                        type,
+                        1,
+                        card => FieldManager.Instance.HasRestableUnit(), // 条件チェック（未レストかつ非パートナー）
+                        () =>
+                        {
+                            FieldSelectionUI.Instance.StartSelection(
+                                1,
+                                cardView =>
+                                {
+                                    if (cardView == null || cardView.cardData == null) return false;
+                                    if (cardView.IsRested || cardView.IsPartner) return false;
 
+                                    foreach (Transform t in FieldManager.Instance.playerFieldZone)
+                                    {
+                                        FieldSlot slot = t.GetComponent<FieldSlot>();
+                                        if (slot != null && slot.currentCard == cardView) return true;
+                                    }
+                                    return false;
+                                },
+                                cardView =>
+                                {
+                                    cardView.SetRest(true); //  表示と内部両方
+                                    Debug.Log($"{cardView.cardData.cardName} をレストしました");
+                                },
+                                CardPlayManager.Instance.OnCostPaymentComplete //  コスト完了後、召喚フローを再開
+                            );
+                        }
+                    );
 
 
             }

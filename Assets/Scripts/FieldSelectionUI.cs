@@ -33,12 +33,19 @@ public class FieldSelectionUI : MonoBehaviour
         foreach (Transform slotTransform in FieldManager.Instance.playerFieldZone)
         {
             var slot = slotTransform.GetComponent<FieldSlot>();
-            if (slot != null && slot.currentCard != null && filter(slot.currentCard)) // ✅ filter を適用
+            if (slot != null && slot.currentCard != null && filter(slot.currentCard)) //  filter を適用
             {
                 slot.currentCard.SetSelectable(true);
             }
         }
-
+        foreach (Transform child in HandManager.Instance.handZone)
+        {
+            var view = child.GetComponent<CardView>();
+            if (view != null && filter(view))
+            {
+                view.SetSelectable(true);  
+            }
+        }
         Debug.Log($" フィールド選択開始（フィルタあり）: {count}体");
     }
 
