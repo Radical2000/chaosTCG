@@ -24,6 +24,7 @@ public class CardData : ScriptableObject
     //  コスト情報
     public List<CostType> summonCostTypes = new List<CostType>();
     public List<int> summonCostAmounts = new List<int>();
+    public string requiredUnitName;
 
     // レベルアップ管理用
     public int currentLevel = 1; // 最初はLv1スタート
@@ -42,6 +43,9 @@ public class CardData : ScriptableObject
     public EXType exType = EXType.None;// このカードがEXカードかどうか
     public string exBaseA;           // EX化条件となるベースカードAの名前（例："A"）
     public string exBaseB;           // EX化条件となる素材カードBの名前（例："B"）
+
+    //特殊召喚の有無
+    public bool isSpecialSummon = false;
 
     public List<CostRequirement> summonCosts = new List<CostRequirement>();
 

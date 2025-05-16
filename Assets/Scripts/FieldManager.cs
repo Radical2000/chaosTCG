@@ -170,9 +170,11 @@ public class FieldManager : MonoBehaviour
             var slot = child.GetComponent<FieldSlot>();
             if (slot != null && slot.currentCard != null && !slot.currentCard.isPartner)
             {
+                Debug.Log(" 手札に戻せるユニットがいる");
                 return true;
             }
         }
+        Debug.Log(" 手札に戻せるユニットがいない");
         return false;
     }
     public void RemoveFromField(CardView view)
@@ -227,6 +229,22 @@ public class FieldManager : MonoBehaviour
                 var card = slot.currentCard;
                 if (card.isFaceUp)
                     return true;
+            }
+        }
+        return false;
+    }
+
+    public bool HasUnitWithName(string name)
+    {
+        foreach (Transform t in playerFieldZone)
+        {
+            FieldSlot slot = t.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard != null)
+            {
+                if (slot.currentCard.cardData.cardName.Contains(name))
+                {
+                    return true;
+                }
             }
         }
         return false;

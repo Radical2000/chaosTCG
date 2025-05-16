@@ -28,7 +28,7 @@ public class CardPlayManager : MonoBehaviour
             return;
         }
 
-        if (!ActionLimiter.Instance.CanSummon())
+        if (!ActionLimiter.Instance.CanSummon()&&!card.isSpecialSummon)
         {
             Debug.LogWarning("このターンの召喚はすでに1回行われました！");
             return;
@@ -41,17 +41,19 @@ public class CardPlayManager : MonoBehaviour
         }
 
         var costList = card.GetSummonCostRequirements();
-
-        //  すべてのコストが支払可能かチェック（選択式も含めて！）
+        //  すべてのコストが支払可能かチェック
         foreach (var cost in costList)
         {
-            if (!cost.isPayable(cardView))
+            bool payable = cost.isPayable(cardView);
+            Debug.Log($"コスト {cost.type} の支払い可能性: {payable}");
+
+            if (!payable)
             {
                 Debug.LogWarning($"コスト {cost.type} を支払えないため、召喚を中止します");
                 return;
             }
         }
-
+       
         //  選択を必要とするコストがある場合 → defer
         var deferredCost = costList.FirstOrDefault(c =>
             c.type == CostType.DiscardX ||
@@ -61,7 +63,9 @@ public class CardPlayManager : MonoBehaviour
             c.type == CostType.FlipUnitFaceUp||
             c.type ==CostType.FlipUnitFaceDown||
             c.type==CostType.FlipUnitFaceDownRest||
-            c.type==CostType.BanishFromDiscard);
+            c.type==CostType.BanishFromDiscard||
+            c.type==CostType.BanishFromDiscardX||
+            c.type==CostType.Return1_Discard1_SS);
 
         if (deferredCost != null)
         {

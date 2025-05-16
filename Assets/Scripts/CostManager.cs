@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using static CardData;
 using static Unity.VisualScripting.Dependencies.Sqlite.SQLite3;
@@ -347,6 +348,102 @@ public class CostManager : MonoBehaviour
                             );
                         }
                     );
+                case CostType.HasSpecificUnitOnField:
+                    return new CostRequirement(
+                        type,
+                        0,
+                        card => FieldManager.Instance.HasUnitWithName(card.cardData.requiredUnitName),
+                        () =>
+                        {
+                            //Debug.Log($"場に {cardView.cardData.requiredUnitName} を含むカードが存在 → 条件達成");
+                            CardPlayManager.Instance.OnCostPaymentComplete();
+                        }
+                    );
+                case CostType.BanishFromDiscardX:
+                    return new CostRequirement(
+                        type,
+                        amount,
+                        card => DiscardManager.Instance.GetPlayerDiscardViews().Count >= amount,
+                        () =>
+                        {
+                            DiscardSelectionUI.Instance.StartSelection(
+                                amount,
+                                view => view != null && view.transform.parent == DiscardManager.Instance.discardZone,
+                                views =>
+                                {
+                                    foreach (var v in views)
+                                    {
+                                        DiscardManager.Instance.BanishCardData(v.cardData);
+                                        GameObject.Destroy(v.gameObject);
+                                        Debug.Log($"墓地から除外: {v.cardData.cardName}");
+                                    }
+                                    CardPlayManager.Instance.OnCostPaymentComplete();
+                                }
+                            );
+                        }
+                    );
+                case CostType.Return1_Discard1_SS:
+                    return new CostRequirement(
+                        type,
+                        2,
+                        card =>
+                        {
+                            // 自分以外の手札カードが1枚以上必要
+                            int validHandCount = HandManager.Instance.GetCardViewsInHand()
+                                .Where(view => view != card)
+                                .Count();
+
+                            Debug.Log($"[SS判定] 自分以外の手札枚数: {validHandCount}");
+
+                            return FieldManager.Instance.HasReturnableUnit() && validHandCount >= 1;
+                        },
+                        () =>
+                        {
+                            // ① フィールドのユニットを選んで手札に戻す
+                            FieldSelectionUI.Instance.StartSelection(
+                                1,
+                                view => view != null && !view.IsPartner,
+                                view =>
+                                {
+                                    if (view.IsEXUnit())
+                                    {
+                                        DiscardManager.Instance.BanishCardData(view.cardData);
+                                        view.DestroyFromField();
+                                        Debug.Log($"EXユニットを除外しました: {view.cardData.cardName}");
+                                    }
+                                    else
+                                    {
+                                        view.isBeingReturnedToHand = true;
+                                        FieldManager.Instance.RemoveFromField(view);
+                                        HandManager.Instance.AddToHand(view.cardData);
+                                        GameObject.Destroy(view.gameObject);
+                                        Debug.Log($"ユニットを手札に戻しました: {view.cardData.cardName}");
+                                    }
+
+                                    // ② 手札を1枚捨てる（自身を除外）
+                                    var targetCard = CardPlayManager.Instance.deferredCardView;
+                                    HandSelectionUI.Instance.StartSelection(
+                                        1,
+                                        handView => handView != targetCard,
+                                        views =>
+                                        {
+                                            foreach (var discard in views)
+                                            {
+                                                HandManager.Instance.RemoveCard(discard);
+                                                DiscardManager.Instance.AddToDiscard(discard.cardData);
+                                                Debug.Log($"手札から捨てました: {discard.cardData.cardName}");
+                                            }
+
+                                            CardPlayManager.Instance.OnCostPaymentComplete();
+                                        },
+                                        null
+                                    );
+                                },
+                                null
+                            );
+                        }
+                    );
+
 
 
             }

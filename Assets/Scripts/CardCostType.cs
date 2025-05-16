@@ -13,8 +13,8 @@ public enum CostType
     FlipUnitFaceDown,
     FlipUnitFaceDownRest,
     BanishFromDiscard,
-    BounceUnit,
-    DiscardFromGraveyardX,
+    HasSpecificUnitOnField,
+    BanishFromDiscardX,
     Draw2_Discard1,
-    SpecialSummon
+    Return1_Discard1_SS
 }
