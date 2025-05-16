@@ -169,9 +169,9 @@ public class CardView : MonoBehaviour
 
     public void OnClickActionButton()
     {
-        Debug.Log($"🧪 cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
-        Debug.Log($"🟡 OnClickActionButton 実行！clickMode = {clickMode}");
-        Debug.Log($"🟡 isSelectable = {isSelectable}, HandSelectionUI.Instance?.IsSelecting = {(HandSelectionUI.Instance != null ? HandSelectionUI.Instance.IsSelecting.ToString() : "null")}");
+        Debug.Log($" cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
+        Debug.Log($" OnClickActionButton 実行！clickMode = {clickMode}");
+        Debug.Log($" isSelectable = {isSelectable}, HandSelectionUI.Instance?.IsSelecting = {(HandSelectionUI.Instance != null ? HandSelectionUI.Instance.IsSelecting.ToString() : "null")}");
 
         // EXレベルアップ用素材カードの選択
         if (transform.parent.name == "PlayerHand")
@@ -182,7 +182,7 @@ public class CardView : MonoBehaviour
                 //  ① レベルアップ素材選択（最優先でチェック）
                 if (EXManager.Instance.IsWaitingForLevelUpMaterial())
                 {
-                    Debug.Log($"🟢 レベルアップ素材として {cardData.cardName} を選択しました");
+                    Debug.Log($" レベルアップ素材として {cardData.cardName} を選択しました");
                     EXManager.Instance.OnSelectLevelUpMaterial(this);
                     return;
                 }
@@ -190,16 +190,22 @@ public class CardView : MonoBehaviour
                 //  ② EX素材選択（materialMode が EX のときだけ）
                 if (EXManager.Instance.HasSelectedEXCard() && EXManager.Instance.materialMode == EXManager.MaterialUseMode.EX)
                 {
-                    Debug.Log($"🟢 EX素材カードとして {cardData.cardName} を選択しました");
+                    Debug.Log($" EX素材カードとして {cardData.cardName} を選択しました");
                     EXManager.Instance.OnClickMaterialCard(this);
                     return;
                 }
             }
         }
+        if (DiscardSelectionUI.Instance != null && DiscardSelectionUI.Instance.IsSelecting)
+        {
+            Debug.Log(" 墓地選択モードでクリック検出 → DiscardSelectionUI に通知");
+            DiscardSelectionUI.Instance.OnCardClickedFromDiscard(this);
+            return;
+        }
 
         if (FieldSelectionUI.Instance != null && FieldSelectionUI.Instance.IsSelecting)
         {
-            Debug.Log("🟢 フィールド選択モードでクリック検出 → FieldSelectionUI に通知");
+            Debug.Log(" フィールド選択モードでクリック検出 → FieldSelectionUI に通知");
             FieldSelectionUI.Instance.OnCardClickedFromField(this);
             return;
         }
@@ -207,28 +213,28 @@ public class CardView : MonoBehaviour
         //  手札選択モードが有効なら優先で処理を渡す
         if (isSelectable && HandSelectionUI.Instance != null && HandSelectionUI.Instance.IsSelecting)
         {
-            Debug.Log("🟢 手札選択モードでカードをクリック → OnCardClickedFromHand に進む");
+            Debug.Log(" 手札選択モードでカードをクリック → OnCardClickedFromHand に進む");
             HandSelectionUI.Instance.OnCardClickedFromHand(this);
             return;
         }
         else
         {
-            if (!isSelectable) Debug.Log("🟠 isSelectable が false のため選択できません");
-            if (HandSelectionUI.Instance == null) Debug.Log("🛑 HandSelectionUI.Instance が null");
-            else if (!HandSelectionUI.Instance.IsSelecting) Debug.Log("🟠 HandSelectionUI は選択モードではありません");
+            if (!isSelectable) Debug.Log(" isSelectable が false のため選択できません");
+            if (HandSelectionUI.Instance == null) Debug.Log(" HandSelectionUI.Instance が null");
+            else if (!HandSelectionUI.Instance.IsSelecting) Debug.Log(" HandSelectionUI は選択モードではありません");
         }
 
-        
+
 
         // EXカード（EXUnitPanel）の選択処理
         if (transform.parent.name == "EXUnitPanel")
         {
-            Debug.Log($"🔷 EXカード {cardData.cardName} を選択しました");
+            Debug.Log($" EXカード {cardData.cardName} を選択しました");
             EXManager.Instance.OnSelectEXCard(cardData); // ✅ これが必要！
             return;
         }
         // ▼ EX C型用：墓地素材クリック
-        Debug.Log($"🧪 cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
+        Debug.Log($" cardName: {cardData.cardName}, isUnit: {cardData.isUnit}, parent: {transform.parent.name}");
 
         // --- 墓地素材クリック判定 ---
         if (transform.parent != null && transform.parent.parent != null && transform.parent.parent.parent != null)
@@ -317,7 +323,7 @@ public class CardView : MonoBehaviour
                 Debug.Log("このカードには現在アクションがありません");
                 break;
         }
-        
+
     }
 
     public void OnClickAttack()
@@ -444,4 +450,9 @@ public class CardView : MonoBehaviour
         // Slot情報を消す処理も必要ならここで
         Destroy(gameObject);
     }
+    public bool IsSelectable()
+    {
+        return isSelectable;
+    }
+
 }

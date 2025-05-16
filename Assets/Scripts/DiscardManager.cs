@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class DiscardManager : MonoBehaviour
 {
@@ -8,7 +9,7 @@ public class DiscardManager : MonoBehaviour
         Instance = this;
     }
 
-
+    public List<CardData> playerDiscard = new List<CardData>();
 
     public HandManager handManager;
     public CardPlayManager fieldManager;
@@ -106,7 +107,7 @@ public class DiscardManager : MonoBehaviour
 
     public void BanishCardData(CardData cardData)
     {
-        GameObject card = Instantiate(cardPrefab, banishZone); 
+        GameObject card = Instantiate(cardPrefab, banishZone);
         CardView view = card.GetComponent<CardView>();
         view.SetCard(cardData, true);
     }
@@ -173,5 +174,21 @@ public class DiscardManager : MonoBehaviour
             }
         }
     }
-    
+    public List<CardView> GetPlayerDiscardViews()
+    {
+        List<CardView> views = new List<CardView>();
+        foreach (Transform child in discardZone)
+        {
+            var view = child.GetComponent<CardView>();
+            if (view != null)
+                views.Add(view);
+        }
+        return views;
+    }
+
+    public List<CardData> GetPlayerDiscard()
+    {
+        return new List<CardData>(playerDiscard); // playerDiscard は CardData の List として定義してある前提
+    }
 }
+    

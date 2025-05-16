@@ -56,8 +56,12 @@ public class CardPlayManager : MonoBehaviour
         var deferredCost = costList.FirstOrDefault(c =>
             c.type == CostType.DiscardX ||
             c.type == CostType.DiscardXUnit ||
-            c.type == CostType.ReturnOneToHand||
-            c.type==CostType.RestOneUnit);
+            c.type == CostType.ReturnOneToHand ||
+            c.type == CostType.RestOneUnit ||
+            c.type == CostType.FlipUnitFaceUp||
+            c.type ==CostType.FlipUnitFaceDown||
+            c.type==CostType.FlipUnitFaceDownRest||
+            c.type==CostType.BanishFromDiscard);
 
         if (deferredCost != null)
         {

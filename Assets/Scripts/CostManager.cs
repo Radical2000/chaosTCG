@@ -7,6 +7,7 @@ using static Unity.VisualScripting.Dependencies.Sqlite.SQLite3;
 
 public class CostManager : MonoBehaviour
 {
+
     public static CostManager Instance;
     private void Awake()
     {
@@ -175,7 +176,7 @@ public class CostManager : MonoBehaviour
                                 cardView =>
                                 {
                                     if (cardView == null || cardView.cardData == null) return false;
-                                    if (cardView.IsRested || cardView.IsPartner) return false;
+                                    if (cardView.IsRested ) return false;
 
                                     foreach (Transform t in FieldManager.Instance.playerFieldZone)
                                     {
@@ -190,6 +191,159 @@ public class CostManager : MonoBehaviour
                                     Debug.Log($"{cardView.cardData.cardName} をレストしました");
                                 },
                                 CardPlayManager.Instance.OnCostPaymentComplete //  コスト完了後、召喚フローを再開
+                            );
+                        }
+                    );
+                case CostType.FlipUnitFaceUp:
+                    return new CostRequirement(
+                        type,
+                        1,
+                        card =>
+                        {
+                            foreach (Transform t in FieldManager.Instance.playerFieldZone)
+                            {
+                                FieldSlot slot = t.GetComponent<FieldSlot>();
+                                if (slot != null && slot.currentCard != null && !slot.currentCard.isFaceUp)
+                                {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        },
+                        () =>
+                        {
+                            FieldSelectionUI.Instance.StartSelection(
+                                1,
+                                cardView =>
+                                {
+                                    if (cardView == null || cardView.cardData == null) return false;
+                                    if (cardView.isFaceUp) return false;
+
+                                    foreach (Transform t in FieldManager.Instance.playerFieldZone)
+                                    {
+                                        FieldSlot slot = t.GetComponent<FieldSlot>();
+                                        if (slot != null && slot.currentCard == cardView)
+                                        {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                },
+                                cardView =>
+                                {
+                                    cardView.isBeingCostProcessed = true; //  フラグで召喚処理制御
+                                    cardView.SetFaceUp(true);
+                                    Debug.Log($"{cardView.cardData.cardName} を表にしました（コスト処理済み）");
+                                },
+                                CardPlayManager.Instance.OnCostPaymentComplete
+                            );
+                        }
+                    );
+                case CostType.FlipUnitFaceDown:
+                    return new CostRequirement(
+                        type,
+                        1,
+                        card =>
+                        {
+                            foreach (Transform t in FieldManager.Instance.playerFieldZone)
+                            {
+                                FieldSlot slot = t.GetComponent<FieldSlot>();
+                                if (slot != null && slot.currentCard != null && slot.currentCard.isFaceUp)
+                                {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        },
+                        () =>
+                        {
+                            FieldSelectionUI.Instance.StartSelection(
+                                1,
+                                cardView =>
+                                {
+                                    if (cardView == null || cardView.cardData == null) return false;
+                                    if (!cardView.isFaceUp) return false;
+
+                                    foreach (Transform t in FieldManager.Instance.playerFieldZone)
+                                    {
+                                        FieldSlot slot = t.GetComponent<FieldSlot>();
+                                        if (slot != null && slot.currentCard == cardView)
+                                        {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                },
+                                cardView =>
+                                {
+                                    cardView.isBeingCostProcessed = true;
+                                    cardView.SetFaceUp(false);
+                                    Debug.Log($"{cardView.cardData.cardName} を裏にしました（コスト処理済み）");
+                                },
+                                CardPlayManager.Instance.OnCostPaymentComplete
+                            );
+                        }
+                    );
+                case CostType.FlipUnitFaceDownRest:
+                    return new CostRequirement(
+                        type,
+                        1,
+                        card => FieldManager.Instance.HasUnitThatCanRest(), // 裏＋レストにできるユニットがいるか
+                        () =>
+                        {
+                            FieldSelectionUI.Instance.StartSelection(
+                                1,
+                                cardView =>
+                                {
+                                    if (cardView == null || cardView.cardData == null) return false;
+                                    if (!cardView.isFaceUp) return false;
+
+                                    foreach (Transform t in FieldManager.Instance.playerFieldZone)
+                                    {
+                                        FieldSlot slot = t.GetComponent<FieldSlot>();
+                                        if (slot != null && slot.currentCard == cardView)
+                                        {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                },
+                                cardView =>
+                                {
+                                    cardView.SetFaceUp(false);  // 裏にする
+                                    cardView.SetRest(true);     // レスト状態にする
+                                    Debug.Log($"{cardView.cardData.cardName} を裏＋レスト状態にしました（コスト）");
+                                },
+                                CardPlayManager.Instance.OnCostPaymentComplete
+                            );
+                        }
+                    );
+                case CostType.BanishFromDiscard:
+                    return new CostRequirement(
+                        type,
+                        1,
+                        card => DiscardManager.Instance.GetPlayerDiscardViews().Count > 0,
+                        () =>
+                        {
+                            DiscardSelectionUI.Instance.StartSelection(
+                                1,
+                                view => view != null && view.transform.parent == DiscardManager.Instance.discardZone, // ✅ 墓地内カードだけ通す
+                                views =>
+                                {
+                                    foreach (var v in views)
+                                    {
+                                        if (v.transform.parent != DiscardManager.Instance.discardZone)
+                                        {
+                                            Debug.LogWarning($" 手札などの不正カードが選ばれました: {v.cardData.cardName}");
+                                            continue;
+                                        }
+
+                                        DiscardManager.Instance.BanishCardData(v.cardData);
+                                        GameObject.Destroy(v.gameObject);
+                                        Debug.Log($" 墓地から除外: {v.cardData.cardName}");
+                                    }
+                                    CardPlayManager.Instance.OnCostPaymentComplete();
+                                }
                             );
                         }
                     );

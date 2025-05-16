@@ -28,12 +28,12 @@ public class EventManager : MonoBehaviour
             if (view != null && !view.isFaceUp)
             {
                 view.SetFaceUp(true);
-                Debug.Log($"🟢 ユニット {view.GetCardData().cardName} を表にしました！");
+                Debug.Log($" ユニット {view.GetCardData().cardName} を表にしました！");
                 return;
             }
         }
 
-        Debug.Log("⚠️ 裏のユニットがいませんでした");
+        Debug.Log(" 裏のユニットがいませんでした");
     }
 
     public void UseEvent(CardEventData eventData, CardView sourceView)
@@ -94,7 +94,7 @@ public class EventManager : MonoBehaviour
 
                     if (!hasFaceDown)
                     {
-                        Debug.Log("⚠️ 裏向きユニットが存在しないため、イベント発動をキャンセルします");
+                        Debug.Log(" 裏向きユニットが存在しないため、イベント発動をキャンセルします");
                         return;
                     }
                 }
@@ -102,7 +102,7 @@ public class EventManager : MonoBehaviour
                 if (target != null && !target.isFaceUp)
                 {
                     target.SetFaceUp(true);
-                    Debug.Log($"🟢 ユニット {target.GetCardData().cardName} を表にしました！");
+                    Debug.Log($" ユニット {target.GetCardData().cardName} を表にしました！");
 
                     // 使用したイベントカード自身を控え室へ移動（activeCardView に事前にセットしておく）
                     if (activeCardView != null)
@@ -125,11 +125,11 @@ public class EventManager : MonoBehaviour
                             return;
                         }
                     }
-                    Debug.Log("⚠️ 自動：裏向きユニットが見つかりませんでした");
+                    Debug.Log(" 自動：裏向きユニットが見つかりませんでした");
                 }
                 else
                 {
-                    Debug.Log("⚠️ 対象が無効（null または 既に表）");
+                    Debug.Log(" 対象が無効（null または 既に表）");
                 }
                 break;
 
@@ -138,7 +138,7 @@ public class EventManager : MonoBehaviour
                 {
                     target.tempPowerBoost += eventData.amount;
                     target.UpdatePowerText();
-                    Debug.Log($"🟢 {target.GetCardData().cardName} の攻撃力が {eventData.amount} 上がった → 現在 {target.GetCurrentPower()}");
+                    Debug.Log($" {target.GetCardData().cardName} の攻撃力が {eventData.amount} 上がった → 現在 {target.GetCurrentPower()}");
 
                     if (activeCardView != null)
                     {
@@ -148,15 +148,15 @@ public class EventManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("⚠️ PowerUpイベントの対象が無効です");
+                    Debug.LogWarning(" PowerUpイベントの対象が無効です");
                 }
                 break;
 
             case EventEffectType.DamageSingle:
                 if (target != null)
                 {
-                    target.TakeDamage(3); // 🔥 3点ダメージ
-                    Debug.Log($"🔥 {target.cardData.cardName} に3ダメージを与えました");
+                    target.TakeDamage(3); //  3点ダメージ
+                    Debug.Log($" {target.cardData.cardName} に3ダメージを与えました");
                 }
                 else
                 {
@@ -211,7 +211,7 @@ public class EventManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("⚠️ SupportUpイベントの対象が無効です");
+                    Debug.LogWarning(" SupportUpイベントの対象が無効です");
                 }
                 break;
             case EventEffectType.GrantPenetrate:
@@ -228,7 +228,7 @@ public class EventManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("⚠️ GrantPenetrateイベントの対象が無効です");
+                    Debug.LogWarning(" GrantPenetrateイベントの対象が無効です");
                 }
                 break;
             case EventEffectType.RestIfNew:
@@ -245,7 +245,7 @@ public class EventManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("⚠️ 対象がこのターン登場していないため、効果は無効です");
+                    Debug.LogWarning(" 対象がこのターン登場していないため、効果は無効です");
                 }
                 break;
                 // 他のイベント効果があればここに続けて追加可能！

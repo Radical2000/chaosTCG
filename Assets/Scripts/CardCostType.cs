@@ -11,6 +11,8 @@ public enum CostType
     RestOneUnit,
     FlipUnitFaceUp,
     FlipUnitFaceDown,
+    FlipUnitFaceDownRest,
+    BanishFromDiscard,
     BounceUnit,
     DiscardFromGraveyardX,
     Draw2_Discard1,

@@ -194,15 +194,41 @@ public class FieldManager : MonoBehaviour
 
     public bool HasRestableUnit()
     {
-        foreach (Transform child in playerFieldZone)
+        foreach (Transform t in playerFieldZone)
         {
-            var slot = child.GetComponent<FieldSlot>();
-            if (slot != null && slot.currentCard != null && !slot.currentCard.IsRested && !slot.currentCard.IsPartner)
+            FieldSlot slot = t.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard != null && !slot.currentCard.IsRested)
             {
                 return true;
             }
         }
         return false;
     }
-
+ 
+    public bool HasFacedownUnit()
+    {
+        foreach (Transform t in playerFieldZone)
+        {
+            FieldSlot slot = t.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard != null && !slot.currentCard.isFaceUp)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    public bool HasUnitThatCanRest()
+    {
+        foreach (Transform t in playerFieldZone)
+        {
+            FieldSlot slot = t.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard != null)
+            {
+                var card = slot.currentCard;
+                if (card.isFaceUp)
+                    return true;
+            }
+        }
+        return false;
+    }
 }
