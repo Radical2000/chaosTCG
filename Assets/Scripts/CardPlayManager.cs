@@ -65,7 +65,8 @@ public class CardPlayManager : MonoBehaviour
             c.type==CostType.FlipUnitFaceDownRest||
             c.type==CostType.BanishFromDiscard||
             c.type==CostType.BanishFromDiscardX||
-            c.type==CostType.Return1_Discard1_SS);
+            c.type==CostType.Return1_Discard1_SS||
+            c.type==CostType.使用しないDraw2_Discard1);
 
         if (deferredCost != null)
         {
@@ -106,6 +107,7 @@ public class CardPlayManager : MonoBehaviour
         CardView view = cardGO.GetComponent<CardView>();
         view.SetCard(data, true);
         view.isNewlySummoned = true;
+        CIPEffectManager.Instance.TryTriggerCIPEffect(view);
     }
 
     public bool IsSameNameCardOnField(CardData card)

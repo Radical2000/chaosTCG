@@ -158,6 +158,50 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &44300382
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 44300384}
+  - component: {fileID: 44300383}
+  m_Layer: 0
+  m_Name: DiscardSelectionUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &44300383
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 44300382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc3b266744583a843b1b818175337091, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &44300384
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 44300382}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1149.2974, y: 243.55328, z: -2.8645194}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &54095379
 GameObject:
   m_ObjectHideFlags: 0
@@ -423,7 +467,10 @@ MonoBehaviour:
   discardZone: {fileID: 646718697}
   deck:
   - {fileID: 11400000, guid: 7eccba0d8d9d0e84e99c1733a39e3738, type: 2}
-  - {fileID: 11400000, guid: a3ae142cde850374aaeab7cf363f8547, type: 2}
+  - {fileID: 11400000, guid: d87c158fca249ad4bb014cddf5baef60, type: 2}
+  - {fileID: 11400000, guid: d87c158fca249ad4bb014cddf5baef60, type: 2}
+  - {fileID: 11400000, guid: d87c158fca249ad4bb014cddf5baef60, type: 2}
+  - {fileID: 11400000, guid: ba355cb8e79d9a343a7a539d5857208a, type: 2}
   discardManager: {fileID: 1818708462}
 --- !u!4 &145562732
 Transform:
@@ -1396,9 +1443,7 @@ MonoBehaviour:
   eventCardPrefab: {fileID: 1015139380800305771, guid: c133776160f921d4687183b136ab73bf, type: 3}
   cardPool:
   - {fileID: 11400000, guid: a5917dbb4ba4e214ba9f98e60c31e02a, type: 2}
-  - {fileID: 11400000, guid: d87c158fca249ad4bb014cddf5baef60, type: 2}
-  - {fileID: 11400000, guid: ba355cb8e79d9a343a7a539d5857208a, type: 2}
-  startHandCount: 8
+  startHandCount: 2
 --- !u!4 &333272977
 Transform:
   m_ObjectHideFlags: 0
@@ -8028,6 +8073,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36b6a1b3335c7054db88a6ba5c17dc2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerDiscard: []
   handManager: {fileID: 333272976}
   fieldManager: {fileID: 0}
   banishManager: {fileID: 0}
@@ -8626,3 +8672,4 @@ SceneRoots:
   - {fileID: 1962568500}
   - {fileID: 726617861}
   - {fileID: 1595471886}
+  - {fileID: 44300384}

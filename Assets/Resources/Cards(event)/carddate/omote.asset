@@ -20,8 +20,22 @@ MonoBehaviour:
   costAmount: 0
   power: 0
   support: 0
-  isPartner: 0
   hasPenetrate: 0
+  exTarget: {fileID: 0}
+  illustration: {fileID: 0}
+  summonCostTypes: 00000000
+  summonCostAmounts: 01000000
+  requiredUnitName: 
+  currentLevel: 1
+  exLevelUpAtkBoost: 0
+  exLevelUpHpBoost: 0
+  canLevelUp: 0
   effectScriptName: 
   isUnit: 0
   linkedEvent: {fileID: 11400000, guid: 52a009e63fd1a3c4aabb9c5cbbea9230, type: 2}
+  hasCIPDiscardEffect: 0
+  isEX: 0
+  exType: 0
+  exBaseA: 
+  exBaseB: 
+  isSpecialSummon: 0

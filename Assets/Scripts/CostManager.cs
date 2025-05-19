@@ -443,6 +443,39 @@ public class CostManager : MonoBehaviour
                             );
                         }
                     );
+                case CostType.使用しないDraw2_Discard1:
+                    return new CostRequirement(
+                        type,
+                        1,
+                        card => true, // デフォルトでは常に可能（山札切れチェックが必要なら後で追加）
+                        () =>
+                        {
+                            Debug.Log("2ドローして1枚捨てるコスト処理を開始");
+
+                            // ① まず2枚ドロー
+                            HandManager.Instance.DrawCard(2);
+
+                            // ② その後、1枚選んで捨てる
+                            var targetCard = CardPlayManager.Instance.deferredCardView;
+                            HandSelectionUI.Instance.StartSelection(
+                                1,
+                                handView => handView != CardPlayManager.Instance.deferredCardView,
+                                views =>
+                                {
+                                    foreach (var discard in views)
+                                    {
+                                        HandManager.Instance.RemoveCard(discard);
+                                        DiscardManager.Instance.AddToDiscard(discard.cardData);
+                                        Debug.Log($"2ドロー→1枚捨てる：{discard.cardData.cardName} を墓地へ");
+                                    }
+
+                                    // 完了
+                                    CardPlayManager.Instance.OnCostPaymentComplete();
+                                },
+                                null
+                            );
+                        }
+                    );
 
 
 

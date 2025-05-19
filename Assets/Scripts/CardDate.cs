@@ -38,6 +38,8 @@ public class CardData : ScriptableObject
     public bool isUnit; // true: ユニット, false: イベント
     public CardEventData linkedEvent; // イベントなら効果をここに
 
+    //CIP効果用
+    public bool hasCIPDiscardEffect;
     //EX用
     public bool isEX;
     public EXType exType = EXType.None;// このカードがEXカードかどうか
@@ -61,7 +63,8 @@ public class CardData : ScriptableObject
     public List<CostRequirement> GetSummonCostRequirements()
     {
         var list = new List<CostRequirement>();
-        for (int i = 0; i < summonCostTypes.Count; i++)
+        int count = Mathf.Min(summonCostTypes.Count, summonCostAmounts.Count); // 長さが短い方に合わせる
+        for (int i = 0; i < count; i++)
         {
             list.Add(CostManager.CostFactory.Create(summonCostTypes[i], summonCostAmounts[i]));
         }

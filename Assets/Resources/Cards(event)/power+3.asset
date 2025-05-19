@@ -15,6 +15,6 @@ MonoBehaviour:
   eventName: "\u30D1\u30EF\u30FC\u3042\u3052\uFF13"
   description: 
   eventTiming: 0
-  effectType: 5
-  amount: 0
+  effectType: 1
+  amount: 3
   targetType: 4

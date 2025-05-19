@@ -15,6 +15,6 @@ public enum CostType
     BanishFromDiscard,
     HasSpecificUnitOnField,
     BanishFromDiscardX,
-    Draw2_Discard1,
+    Žg—p‚µ‚È‚¢Draw2_Discard1,
     Return1_Discard1_SS
 }

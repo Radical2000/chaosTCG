@@ -121,7 +121,7 @@ public class EventManager : MonoBehaviour
                         if (!view.isFaceUp)
                         {
                             view.SetFaceUp(true);
-                            Debug.Log($"🟢 自動：{view.GetCardData().cardName} を表にしました！");
+                            Debug.Log($" 自動：{view.GetCardData().cardName} を表にしました！");
                             return;
                         }
                     }
@@ -160,7 +160,7 @@ public class EventManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("⚠️ Damageイベントの対象が無効です");
+                    Debug.LogWarning(" Damageイベントの対象が無効です");
                 }
 
                 if (activeCardView != null)
@@ -170,14 +170,14 @@ public class EventManager : MonoBehaviour
                 }
                 break;
             case EventEffectType.GlobalDamage:
-                Debug.Log($" 全体{eventData.amount}ダメージを与えます");
+                Debug.Log($" 相手フィールドの全体に{eventData.amount}ダメージを与えます");
 
-                CardView[] allCards = FindObjectsOfType<CardView>();
-                foreach (var view in allCards)
+                foreach (Transform slotTransform in FieldManager.Instance.enemyFieldZone)
                 {
-                    if (view.cardData.isUnit)
+                    FieldSlot slot = slotTransform.GetComponent<FieldSlot>();
+                    if (slot != null && slot.currentCard != null && slot.currentCard.cardData.isUnit)
                     {
-                        view.TakeDamage(eventData.amount);
+                        slot.currentCard.TakeDamage(eventData.amount);
                     }
                 }
 
@@ -188,6 +188,7 @@ public class EventManager : MonoBehaviour
                     activeCardView = null;
                 }
                 break;
+
             case EventEffectType.SupportUp:
                 if (target != null)
                 {

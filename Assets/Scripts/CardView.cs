@@ -85,11 +85,20 @@ public class CardView : MonoBehaviour
     public CardData GetCardData() => cardData;
 
     public int GetCurrentPower() => cardData.power + tempPowerBoost;
-
+    public void RefreshView()
+    {
+        UpdateHPText();
+        UpdateLevelText();
+        UpdatePowerText();
+    }
     public void UpdatePowerText()
     {
         if (powerText != null)
-            powerText.text = power.ToString(); 
+        {
+            power = tempPowerBoost + power;
+            powerText.text = power.ToString();
+        }
+            
     }
 
     public void UpdateHPText()
@@ -134,7 +143,7 @@ public class CardView : MonoBehaviour
 
         if (currentHP <= 0)
         {
-            SetFaceUp(false);       // ✅ 裏にするだけ
+            SetFaceUp(false);       //  裏にするだけ
             Debug.Log($"{cardData.cardName} は裏になりました（HP0）");
         }
 
@@ -330,7 +339,7 @@ public class CardView : MonoBehaviour
     {
         if (isRested || !isFaceUp)
         {
-            Debug.Log("🛑 攻撃できない状態（レスト or 裏）");
+            Debug.Log(" 攻撃できない状態（レスト or 裏）");
             return;
         }
 
@@ -365,7 +374,7 @@ public class CardView : MonoBehaviour
             return;
         }
 
-        Debug.Log($"🟢 EX候補カード {cardData.cardName} を選択しました");
+        Debug.Log($" EX候補カード {cardData.cardName} を選択しました");
         EXManager.Instance.OnSelectEXCard(this.cardData); // ✅ CardViewが持っているCardDataを渡す！
 
     }
@@ -408,7 +417,7 @@ public class CardView : MonoBehaviour
         currentHP = GetEffectiveSupport();
         UpdateHPText();
 
-        Debug.Log($"✅ {cardData.cardName} がレベル{currentLevel}になりました！ 攻撃力+{accumulatedAtkBoost}, HP+{accumulatedHpBoost}");
+        Debug.Log($" {cardData.cardName} がレベル{currentLevel}になりました！ 攻撃力+{accumulatedAtkBoost}, HP+{accumulatedHpBoost}");
         if (levelText != null) levelText.text = $"Lv{cardData.currentLevel}";
 
     }
