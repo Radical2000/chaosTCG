@@ -1443,7 +1443,8 @@ MonoBehaviour:
   eventCardPrefab: {fileID: 1015139380800305771, guid: c133776160f921d4687183b136ab73bf, type: 3}
   cardPool:
   - {fileID: 11400000, guid: a5917dbb4ba4e214ba9f98e60c31e02a, type: 2}
-  startHandCount: 2
+  - {fileID: 11400000, guid: d87c158fca249ad4bb014cddf5baef60, type: 2}
+  startHandCount: 8
 --- !u!4 &333272977
 Transform:
   m_ObjectHideFlags: 0
@@ -3892,6 +3893,50 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1175.6073, y: 500.35297, z: 1.6265608}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &920432305
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 920432307}
+  - component: {fileID: 920432306}
+  m_Layer: 0
+  m_Name: CIPEffectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &920432306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 920432305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6318ef70ffb9f9a49b4f2a05078512fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &920432307
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 920432305}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1149.2974, y: 243.55328, z: -2.8645194}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8673,3 +8718,4 @@ SceneRoots:
   - {fileID: 726617861}
   - {fileID: 1595471886}
   - {fileID: 44300384}
+  - {fileID: 920432307}

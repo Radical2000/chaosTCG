@@ -23,7 +23,7 @@ MonoBehaviour:
   hasPenetrate: 0
   exTarget: {fileID: 11400000, guid: 63ae1497b87fc594498ed1ae9f71f20e, type: 2}
   illustration: {fileID: 0}
-  summonCostTypes: 0b000000
+  summonCostTypes: 00000000
   summonCostAmounts: 00000000
   requiredUnitName: '"B"'
   currentLevel: 1
@@ -33,7 +33,7 @@ MonoBehaviour:
   effectScriptName: 
   isUnit: 1
   linkedEvent: {fileID: 0}
-  hasCIPDiscardEffect: 0
+  cipEffectType: 2
   isEX: 0
   exType: 0
   exBaseA: 

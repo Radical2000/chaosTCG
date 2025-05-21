@@ -107,7 +107,20 @@ public class CardPlayManager : MonoBehaviour
         CardView view = cardGO.GetComponent<CardView>();
         view.SetCard(data, true);
         view.isNewlySummoned = true;
-        CIPEffectManager.Instance.TryTriggerCIPEffect(view);
+
+        // スロットの空きを探して配置（ここは元々あなたの実装に合わせて調整）
+        foreach (Transform child in fieldZone)
+        {
+            FieldSlot slot = child.GetComponent<FieldSlot>();
+            if (slot != null && slot.currentCard == null)
+            {
+                slot.PlaceCard(view);
+
+                //  配置後にCIP効果発動
+                CIPEffectManager.Instance.TryTriggerCIPEffect(view);
+                break;
+            }
+        }
     }
 
     public bool IsSameNameCardOnField(CardData card)
@@ -154,4 +167,5 @@ public class CardPlayManager : MonoBehaviour
             Debug.LogWarning(" OnCostPaymentComplete: deferredCardView が null");
         }
     }
+
 }

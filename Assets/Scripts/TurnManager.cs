@@ -40,14 +40,14 @@ public class TurnManager : MonoBehaviour
 
     public void StartTurn()
     {
-        Debug.Log("? ターン開始（自分）");
+        Debug.Log(" ターン開始（自分）");
         currentPhase = TurnPhase.Draw;
         StartDrawPhase();
     }
 
     private void StartDrawPhase()
     {
-        Debug.Log("?? ドローフェイズ：1枚ドロー");
+        Debug.Log(" ドローフェイズ：1枚ドロー");
 
         HandManager.Instance.DrawCard(1); 
 
@@ -79,7 +79,7 @@ public class TurnManager : MonoBehaviour
 
     private void StartMainPhase()
     {
-        Debug.Log("?? メインフェイズ開始");
+        Debug.Log(" メインフェイズ開始");
 
         // カウントリセット（召喚1回, EX化1回, LvUP1回）
         ActionLimiter.Instance.ResetMainPhaseLimits();
@@ -89,17 +89,18 @@ public class TurnManager : MonoBehaviour
 
     private void StartEndPhase()
     {
-        Debug.Log("?? エンドフェイズ開始");
+        Debug.Log(" エンドフェイズ開始");
 
-        // 一時効果解除、1体表化＆スタンド、エンド効果など
-        FieldManager.Instance.ResolveEndPhase();
-
-        Invoke(nameof(EndTurn), 1.0f); // 少し待ってターン終了処理
+        // 完了時に EndTurn を呼ぶコールバック方式に変更
+        FieldManager.Instance.ResolveEndPhase(() =>
+        {
+            EndTurn(); // 選択完了後にターン終了
+        });
     }
 
     private void EndTurn()
     {
-        Debug.Log("?? ターンエンド → 次のプレイヤーへ");
+        Debug.Log(" ターンエンド → 次のプレイヤーへ");
 
         // ターン終了処理（裏→表や一時効果リセットなど）をユニットに通知
         FieldManager.Instance.EndTurnResetAll();
@@ -169,7 +170,7 @@ public class TurnManager : MonoBehaviour
         }
         else if (currentPhase == TurnPhase.Battle)
         {
-            // ⚠️ バトル中でも「効果フェーズ」や「防御選択中」は無効にする
+            //  バトル中でも「効果フェーズ」や「防御選択中」は無効にする
             var battlePhase = BattleManager.Instance.currentPhase;
             if (battlePhase == BattlePhase.EffectPhase1 ||
                 battlePhase == BattlePhase.EffectPhase2 ||
@@ -177,16 +178,16 @@ public class TurnManager : MonoBehaviour
                 battlePhase == BattlePhase.GuardDeclaration ||
                 battlePhase == BattlePhase.ResolveBattle)
             {
-                Debug.Log("🛑 今はフェーズ移行できません（バトル中の効果フェーズなど）");
+                Debug.Log(" 今はフェーズ移行できません（バトル中の効果フェーズなど）");
                 return;
             }
 
-            // 🟢 攻撃 or 攻撃終了直後ならOK
+            //  攻撃 or 攻撃終了直後ならOK
             OnClickEndBattle();
         }
         else if (currentPhase == TurnPhase.End)
         {
-            Debug.Log("💤 既にエンドフェイズです");
+            Debug.Log(" 既にエンドフェイズです");
         }
     }
 }

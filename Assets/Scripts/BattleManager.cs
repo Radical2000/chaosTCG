@@ -117,7 +117,7 @@ public class BattleManager : MonoBehaviour
 
     private void ShowDefenseChoice(CardView attacker)
     {
-        Debug.Log("🛡️ 防御側の選択を開始します");
+        Debug.Log(" 防御側の選択を開始します");
         Debug.Log($"enemyFieldZone のスロット数: {enemyFieldZone.childCount}");
 
         bool hasValidGuard = false;
@@ -130,19 +130,19 @@ public class BattleManager : MonoBehaviour
             FieldSlot slot = slotObj.GetComponent<FieldSlot>();
             if (slot == null)
             {
-                Debug.LogWarning($"⚠️ Slot {slotObj.name} に FieldSlot がついていません！");
+                Debug.LogWarning($" Slot {slotObj.name} に FieldSlot がついていません！");
                 continue;
             }
 
             if (slot.currentCard == null)
             {
-                Debug.Log($"⬜ Slot {slotObj.name} にカードが入っていません");
+                Debug.Log($" Slot {slotObj.name} にカードが入っていません");
                 continue;
             }
 
             CardView view = slot.currentCard;
 
-            Debug.Log($"🧪 ガード候補: {view.cardData.cardName}, isFaceUp={view.isFaceUp}, isRested={view.isRested}");
+            Debug.Log($" ガード候補: {view.cardData.cardName}, isFaceUp={view.isFaceUp}, isRested={view.isRested}");
 
             if (view.isFaceUp && !view.isRested)
             {
@@ -151,16 +151,16 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"🔍 チェックしたスロット数: {totalSlotChecked}");
+        Debug.Log($" チェックしたスロット数: {totalSlotChecked}");
 
         if (!hasValidGuard)
         {
-            Debug.Log("⚠️ 表向きガード可能なユニットがいない → 自動的にライフで受けます");
+            Debug.Log(" 表向きガード可能なユニットがいない → 自動的にライフで受けます");
             OnClickTakeLifeDamage();
             return;
         }
 
-        Debug.Log("✅ ガード可能なユニットあり → 選択を待ちます");
+        Debug.Log(" ガード可能なユニットあり → 選択を待ちます");
         defenseChoicePanel.SetActive(true);
     }
 
@@ -344,7 +344,7 @@ public class BattleManager : MonoBehaviour
 
     public void ResolveBattle()
     {
-        Debug.Log("▶ バトル解決開始");
+        Debug.Log(" バトル解決開始");
 
         CardData attacker = currentAttacker.GetCardData();
         CardData defender = currentDefender?.GetCardData();
@@ -363,9 +363,9 @@ public class BattleManager : MonoBehaviour
         //  ライフで受ける場合
         if (!defenderExists)
         {
-            Debug.Log("🩸 防御ユニットがいない → ライフで直接ダメージ");
+            Debug.Log(" 防御ユニットがいない → ライフで直接ダメージ");
             opponentDeck.TakeDamage(atkPower);
-            Debug.Log("✅ バトル解決完了（ライフ受け）");
+            Debug.Log(" バトル解決完了（ライフ受け）");
             return;
         }
 
@@ -376,12 +376,12 @@ public class BattleManager : MonoBehaviour
         {
             if (attackerHasPenetrate)
             {
-                Debug.Log("🗡️ 防御が裏 → 貫通持ちなので本体にダメージ！");
+                Debug.Log(" 防御が裏 → 貫通持ちなので本体にダメージ！");
                 opponentDeck.TakeDamage(atkPower);
             }
             else
             {
-                Debug.Log("🛡️ 防御が裏 → 攻撃は空振り！");
+                Debug.Log(" 防御が裏 → 攻撃は空振り！");
             }
             return;
         }
@@ -390,12 +390,12 @@ public class BattleManager : MonoBehaviour
         currentDefender.TakeDamage(atkPower);
         currentAttacker.TakeDamage(defPower);
 
-        // ✅ ダメージ後に貫通判定
+        //  ダメージ後に貫通判定
         bool defenderDied = !currentDefender.isFaceUp;
         if (defenderDied && attackerHasPenetrate)
         {
             int pierceDamage = Mathf.Max(0,  - currentDefender.currentHP);
-            Debug.Log($"🩸 防御が戦闘で裏 → 本体に {pierceDamage} 貫通ダメージ！（ DEF HP: {currentDefender.currentHP}）");
+            Debug.Log($" 防御が戦闘で裏 → 本体に {pierceDamage} 貫通ダメージ！（ DEF HP: {currentDefender.currentHP}）");
             opponentDeck.TakeDamage(pierceDamage);
         }
 
@@ -416,7 +416,8 @@ public class BattleManager : MonoBehaviour
         }
 
 
-        Debug.Log("✅ バトル解決完了（通常戦闘）");
+        Debug.Log(" バトル解決完了（通常戦闘）");
+        currentPhase = BattlePhase.None;
     }
 
 
@@ -454,12 +455,12 @@ public class BattleManager : MonoBehaviour
         if (currentEffectTurn == EffectTurn.Attacker)
         {
             currentEffectTurn = EffectTurn.Defender;
-            Debug.Log("🟦 防御側の効果使用ターンに切り替え");
+            Debug.Log(" 防御側の効果使用ターンに切り替え");
         }
         else
         {
             currentEffectTurn = EffectTurn.Attacker;
-            Debug.Log("🟥 攻撃側の効果使用ターンに切り替え");
+            Debug.Log(" 攻撃側の効果使用ターンに切り替え");
         }
 
         // モードを再設定（UseEvent / None 切り替えなどもここに入れる）
@@ -523,18 +524,10 @@ public class BattleManager : MonoBehaviour
         }
         // 防御側のターン（今は何もしない or 防御イベントがあるなら同様に設定）
     }
-    //ターン終了時にステータスリセット用
-    public void ResetAllTempPower()
-    {
-        foreach (Transform card in playerFieldZone)
-        {
-            CardView view = card.GetComponent<CardView>();
-            if (view != null) view.tempPowerBoost = 0;
-        }
-    }
+
     public void OnClickEndBattle()
     {
-        Debug.Log("🛑 攻撃せずにバトルを終了 → エンドフェイズへ");
+        Debug.Log(" 攻撃せずにバトルを終了 → エンドフェイズへ");
         TurnManager.Instance.NextPhase(); // → End へ
     }
 }

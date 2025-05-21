@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class FieldManager : MonoBehaviour
@@ -17,36 +18,113 @@ public class FieldManager : MonoBehaviour
     public FieldSlot selectedSlot;
 
     // エンドフェイズ：表＆スタンド＆エンド効果を処理
-    public void ResolveEndPhase()
+    public void ResolveEndPhase(System.Action onComplete)
     {
-        Debug.Log("🌀 エンドフェイズ処理開始：表戻し・スタンド処理");
+        Debug.Log(" エンドフェイズ処理開始：表戻し・スタンド処理");
 
-        bool flipped = false;
-        bool stood = false;
+        List<CardView> flipCandidates = new List<CardView>();
+        List<CardView> standCandidates = new List<CardView>();
 
-        foreach (Transform unit in playerFieldZone)
+        foreach (Transform slotObj in playerFieldZone)
         {
-            var view = unit.GetComponent<CardView>();
+            FieldSlot slot = slotObj.GetComponent<FieldSlot>();
+            if (slot == null || slot.currentCard == null) continue;
 
-            if (!flipped && !view.isFaceUp)
+            CardView view = slot.currentCard;
+            if (!view.isFaceUp) flipCandidates.Add(view);
+            if (view.isRested) standCandidates.Add(view);
+        }
+
+        void ResolveStandPhase()
+        {
+            if (standCandidates.Count == 1)
             {
-                view.SetFaceUp(true);
-                Debug.Log($" 表に戻しました：{view.cardData.cardName}");
-                flipped = true;
+                var target = standCandidates[0];
+                target.SetRest(false);
+                Debug.Log($" スタンドさせました（自動）：{target.cardData.cardName}");
+                ResetAllTempPower();
+                onComplete?.Invoke();
             }
-
-            if (!stood && view.isRested)
+            else if (standCandidates.Count > 1)
             {
-                view.SetRest(false);
-                Debug.Log($" スタンドさせました：{view.cardData.cardName}");
-                stood = true;
+                FieldSelectionUI.Instance.StartSelection(
+                    1,
+                    card => standCandidates.Contains(card),
+                    selected =>
+                    {
+                        if (selected != null)
+                        {
+                            selected.SetRest(false);
+                            Debug.Log($" スタンドさせました（選択）：{selected.cardData.cardName}");
+                        }
+                        ResetAllTempPower();
+                        onComplete?.Invoke();
+                    },
+                    null
+                );
             }
+            else
+            {
+                ResetAllTempPower();
+                onComplete?.Invoke();
+            }
+        }
 
-            if (flipped && stood) break;
+        if (flipCandidates.Count == 1)
+        {
+            var target = flipCandidates[0];
+            target.SetFaceUp(true);
+            Debug.Log($" 表に戻しました（自動）：{target.cardData.cardName}");
+            ResolveStandPhase();
+        }
+        else if (flipCandidates.Count > 1)
+        {
+            FieldSelectionUI.Instance.StartSelection(
+                1,
+                card => flipCandidates.Contains(card),
+                selected =>
+                {
+                    if (selected != null)
+                    {
+                        selected.SetFaceUp(true);
+                        Debug.Log($" 表に戻しました（選択）：{selected.cardData.cardName}");
+                    }
+                    ResolveStandPhase();
+                },
+                null
+            );
+        }
+        else
+        {
+            ResolveStandPhase();
         }
     }
 
 
+
+    //ターン終了時にステータスリセット用
+    public void ResetAllTempPower()
+    {
+        Debug.Log(" ResetAllTempPowerを呼んだ");
+        foreach (Transform slotObj in playerFieldZone)
+        {
+            FieldSlot slot = slotObj.GetComponent<FieldSlot>();
+            if (slot == null || slot.cardAnchor == null) continue;
+
+            if (slot.cardAnchor.childCount == 0) continue;
+
+            Transform cardObj = slot.cardAnchor.GetChild(0);
+            CardView view = cardObj.GetComponent<CardView>();
+
+            if (view != null && view.cardData != null)
+            {
+                view.tempPowerBoost = 0;
+                view.UpdatePowerText();
+                Debug.Log($"ATKリセット：{view.cardData.cardName}");
+            }
+        }
+
+    }
     private void FlipAndStandOne(Transform fieldZone)
     {
         foreach (Transform child in fieldZone)

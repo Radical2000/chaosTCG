@@ -113,6 +113,8 @@ public class FieldSlot : MonoBehaviour
         FieldManager.Instance.selectedCardToSummon = null;
 
         Debug.Log($"スロット {slotIndex} に {card.cardData.cardName} を配置しました");
+        CIPEffectManager.Instance.TryTriggerCIPEffect(currentCard);
+
     }
 
     //slotのハイライト

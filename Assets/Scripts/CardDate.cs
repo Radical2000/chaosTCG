@@ -39,7 +39,7 @@ public class CardData : ScriptableObject
     public CardEventData linkedEvent; // イベントなら効果をここに
 
     //CIP効果用
-    public bool hasCIPDiscardEffect;
+    public CIPEffectType cipEffectType = CIPEffectType.None;
     //EX用
     public bool isEX;
     public EXType exType = EXType.None;// このカードがEXカードかどうか

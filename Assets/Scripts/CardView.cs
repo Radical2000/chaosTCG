@@ -95,10 +95,8 @@ public class CardView : MonoBehaviour
     {
         if (powerText != null)
         {
-            power = tempPowerBoost + power;
-            powerText.text = power.ToString();
+            powerText.text = GetCurrentPower().ToString();
         }
-            
     }
 
     public void UpdateHPText()
