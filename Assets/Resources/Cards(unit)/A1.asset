@@ -33,7 +33,7 @@ MonoBehaviour:
   effectScriptName: 
   isUnit: 1
   linkedEvent: {fileID: 0}
-  cipEffectType: 2
+  cipEffectType: 6
   isEX: 0
   exType: 0
   exBaseA: 

@@ -177,6 +177,7 @@ public class BattleManager : MonoBehaviour
 
     public void OnClickTakeLifeDamage()
     {
+        Debug.Log("ボタンが押されました！");
         Debug.Log("OnClickTakeLifeDamage 実行 (BM: " + this + ")");
 
         if (currentAttacker == null || currentAttacker.GetCardData() == null)
